@@ -1,0 +1,48 @@
+import { noop, now } from './util';
+
+let playing = false;
+let lastUpdateTime;
+
+const defaults = {
+  msPerUpdate: 10,
+  maxTicks: 5,
+  update: noop,
+  draw: noop,
+};
+
+let options;
+
+const resume = () => {
+  playing = true;
+  lastUpdateTime = now();
+};
+
+const pause = () => {
+  playing = false;
+};
+
+const gameControls = {
+  resume,
+  pause,
+};
+
+const tick = () => {
+  if (playing) {
+    const dt = options.msPerUpdate;
+    const currentTime = now();
+    lastUpdateTime = Math.max(lastUpdateTime, currentTime - (options.maxTicks * dt));
+    while (lastUpdateTime < currentTime - options.msPerUpdate) {
+      lastUpdateTime += options.msPerUpdate;
+      options.state = options.update(options.state, dt, gameControls);
+    }
+  }
+  options.draw(options.state);
+  requestAnimationFrame(tick);
+};
+
+export default (parameters) => {
+  options = Object.assign({}, defaults, parameters);
+  resume();
+  tick();
+  return gameControls;
+};
