@@ -21,7 +21,7 @@ const stretchToFillScreen = () => {
 window.addEventListener('resize', stretchToFillScreen);
 stretchToFillScreen();
 
-const stage = new PIXI.Container();
+let stage = new PIXI.Container();
 
 export const getSize = () => ({ width, height });
 
@@ -29,10 +29,13 @@ export const addToStage = (child) => {
   stage.addChild(child);
 };
 
+export const resetStage = () => {
+  stage = new PIXI.Container();
+};
+
 export const draw = ({ camera }) => {
   stage.x = (width / 2) - (camera.x * camera.zoom);
   stage.y = (height / 2) - (camera.y * camera.zoom);
   stage.scale.x = stage.scale.y = camera.zoom;
-  stage.children = stage.children.sort((a, b) => a.position.y - b.position.y);
   renderer.render(stage);
 };

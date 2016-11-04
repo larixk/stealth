@@ -21,13 +21,18 @@ const pause = () => {
   playing = false;
 };
 
+const setState = (state) => {
+  options.state = state;
+};
+
 const gameControls = {
   resume,
   pause,
+  setState,
 };
 
 const tick = () => {
-  if (playing) {
+  if (playing && options.state) {
     const dt = options.msPerUpdate;
     const currentTime = now();
     lastUpdateTime = Math.max(lastUpdateTime, currentTime - (options.maxTicks * dt));
@@ -36,7 +41,9 @@ const tick = () => {
       options.state = options.update(options.state, dt, gameControls);
     }
   }
-  options.draw(options.state);
+  if (options.state) {
+    options.draw(options.state);
+  }
   requestAnimationFrame(tick);
 };
 
