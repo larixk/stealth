@@ -3,7 +3,7 @@ import { lerp } from '../util';
 import { isKeyDown } from '../input';
 import { addToStage } from '../draw';
 
-function update() {
+function update(state) {
   this.hitbox.rotate(-this.rotation);
 
   if (isKeyDown('TurnPlayerRight')) {
@@ -20,8 +20,30 @@ function update() {
     this.speed -= 0.1;
     this.speed = Math.max(-0.5, this.speed);
   }
+  this.alpha = 1;
+  if (isKeyDown('Pull')) {
+    this.alpha = Math.random();
+    state.playerWell = { position: this.position, strength: 0.5 };
+  }
+  if (isKeyDown('Push')) {
+    this.alpha = Math.random();
+    state.playerWell = { position: this.position, strength: -1 };
+  }
+  if (isKeyDown('Push')) {
+    state.wells = null;
+  }
+  if (isKeyDown('Pull')) {
+    console.log('dropped at ', this.position);
+    state.wells = [{
+      position: {
+        x: this.position.x,
+        y: this.position.y,
+      },
+      strength: 0.2,
+    }];
+  }
 
-  this.speed *= 0.9;
+  this.speed *= 0.95;
   if (Math.abs(this.speed) < 0.02) {
     this.speed = 0;
   }
@@ -39,13 +61,14 @@ export default () => {
   const PIXI = window.PIXI;
   const graphics = new PIXI.Graphics();
 
-  graphics.beginFill(0x333333);
-  graphics.lineStyle(4, 0x111111, 1);
 
-  graphics.moveTo(-5, -3);
-  graphics.lineTo(5, 0);
-  graphics.lineTo(-5, 3);
-  graphics.lineTo(-5, -3);
+  const size = 2;
+  graphics.beginFill(0x333333);
+
+  graphics.moveTo(-10 * size, -6 * size);
+  graphics.lineTo(10 * size, 0 * size);
+  graphics.lineTo(-10 * size, 6 * size);
+  graphics.lineTo(-10 * size, -6 * size);
   graphics.endFill();
 
   const player = new PIXI.Sprite();

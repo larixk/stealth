@@ -20,14 +20,6 @@ function update(state) {
   if (isKeyDown('MoveCameraDown')) {
     this.dY += 0.1;
   }
-  if (isKeyDown('ResetCamera')) {
-    this.dX = 0;
-    this.dY = 0;
-    this.dZoom = 0;
-    this.zoom = 1;
-    this.x = state.player.position.x;
-    this.y = state.player.position.y;
-  }
 
   this.dX *= 0.9;
   this.dX = clamp(this.dX, -1, 1);
@@ -42,10 +34,13 @@ function update(state) {
 
   this.zoom *= 1 + this.dZoom;
 
-  this.zoom = clamp(this.zoom, 0.001, 1);
+  this.zoom = clamp(this.zoom, 0.0001, 1);
 
-  this.x = lerp(this.x, state.player.x, 0.04);
-  this.y = lerp(this.y, state.player.y, 0.04);
+  const cameraTargetX = state.player.x + Math.cos(state.player.rotation) * state.player.speed * 200;
+  const cameraTargetY = state.player.y + Math.sin(state.player.rotation) * state.player.speed * 200;
+
+  this.x = lerp(this.x, cameraTargetX, 0.02);
+  this.y = lerp(this.y, cameraTargetY, 0.02);
   this.zoom = lerp(this.zoom, 1 - Math.pow(state.player.speed, 5), 0.01);
   this.zoom = clamp(this.zoom, 0.001, 1);
 }

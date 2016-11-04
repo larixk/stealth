@@ -198,6 +198,14 @@
 	  return from + Math.random() * (to - from);
 	};
 
+	var distance = exports.distance = function distance(p1, p2) {
+	  return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+	};
+
+	var direction = exports.direction = function direction(p1, p2) {
+	  return Math.atan2(p2.y - p1.y, p2.x - p1.x);
+	};
+
 	var throttle = exports.throttle = function throttle(f, t) {
 	  var lastCall = 0;
 	  return function () {
@@ -232,26 +240,31 @@
 
 	var _player2 = _interopRequireDefault(_player);
 
-	var _camera = __webpack_require__(12);
+	var _floater = __webpack_require__(12);
+
+	var _floater2 = _interopRequireDefault(_floater);
+
+	var _camera = __webpack_require__(13);
 
 	var _camera2 = _interopRequireDefault(_camera);
-
-	var _camera3 = __webpack_require__(13);
-
-	var _camera4 = _interopRequireDefault(_camera3);
 
 	var _util = __webpack_require__(3);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	exports.default = function () {
-	  var agents = (0, _util.times)(100, function () {
-	    return (0, _camera2.default)({ position: { x: (0, _util.rand)(1000, 2000), y: (0, _util.rand)(-500, 500) } });
+	  var agents = (0, _util.times)(500, function () {
+	    return (0, _floater2.default)({
+	      position: {
+	        x: (0, _util.rand)(1000, 6000),
+	        y: (0, _util.rand)(-3000, 3000)
+	      }
+	    });
 	  });
 	  return {
 	    player: (0, _player2.default)(),
 	    agents: agents,
-	    camera: (0, _camera4.default)()
+	    camera: (0, _camera2.default)()
 	  };
 	};
 
@@ -277,7 +290,7 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	function update() {
+	function update(state) {
 	  this.hitbox.rotate(-this.rotation);
 
 	  if ((0, _input.isKeyDown)('TurnPlayerRight')) {
@@ -294,8 +307,30 @@
 	    this.speed -= 0.1;
 	    this.speed = Math.max(-0.5, this.speed);
 	  }
+	  this.alpha = 1;
+	  if ((0, _input.isKeyDown)('Pull')) {
+	    this.alpha = Math.random();
+	    state.playerWell = { position: this.position, strength: 0.5 };
+	  }
+	  if ((0, _input.isKeyDown)('Push')) {
+	    this.alpha = Math.random();
+	    state.playerWell = { position: this.position, strength: -1 };
+	  }
+	  if ((0, _input.isKeyDown)('Push')) {
+	    state.wells = null;
+	  }
+	  if ((0, _input.isKeyDown)('Pull')) {
+	    console.log('dropped at ', this.position);
+	    state.wells = [{
+	      position: {
+	        x: this.position.x,
+	        y: this.position.y
+	      },
+	      strength: 0.2
+	    }];
+	  }
 
-	  this.speed *= 0.9;
+	  this.speed *= 0.95;
 	  if (Math.abs(this.speed) < 0.02) {
 	    this.speed = 0;
 	  }
@@ -313,13 +348,13 @@
 	  var PIXI = window.PIXI;
 	  var graphics = new PIXI.Graphics();
 
+	  var size = 2;
 	  graphics.beginFill(0x333333);
-	  graphics.lineStyle(4, 0x111111, 1);
 
-	  graphics.moveTo(-5, -3);
-	  graphics.lineTo(5, 0);
-	  graphics.lineTo(-5, 3);
-	  graphics.lineTo(-5, -3);
+	  graphics.moveTo(-10 * size, -6 * size);
+	  graphics.lineTo(10 * size, 0 * size);
+	  graphics.lineTo(-10 * size, 6 * size);
+	  graphics.lineTo(-10 * size, -6 * size);
 	  graphics.endFill();
 
 	  var player = new PIXI.Sprite();
@@ -1366,17 +1401,23 @@
 	var keyDown = {};
 
 	var keyMapping = {
-	  ' ': 'ResetCamera',
+	  ' ': 'Pull',
+	  Shift: 'Push',
 	  '-': 'ZoomCameraIn',
 	  '=': 'ZoomCameraOut',
-	  ArrowUp: 'MoveCameraUp',
-	  ArrowLeft: 'MoveCameraLeft',
-	  ArrowDown: 'MoveCameraDown',
-	  ArrowRight: 'MoveCameraRight',
+	  // ArrowUp: 'MoveCameraUp',
+	  // ArrowLeft: 'MoveCameraLeft',
+	  // ArrowDown: 'MoveCameraDown',
+	  // ArrowRight: 'MoveCameraRight',
+	  ArrowUp: 'MovePlayerForward',
+	  ArrowLeft: 'TurnPlayerLeft',
+	  ArrowDown: 'MovePlayerBack',
+	  ArrowRight: 'TurnPlayerRight',
 	  w: 'MovePlayerForward',
 	  a: 'TurnPlayerLeft',
 	  s: 'MovePlayerBack',
 	  d: 'TurnPlayerRight'
+
 	};
 
 	window.addEventListener('mousedown', function () {
@@ -1398,6 +1439,7 @@
 	    console.log('Unmapped key pressed', e.key);
 	    return;
 	  }
+	  e.preventDefault();
 	  keyDown[mappedKey] = true;
 	});
 
@@ -1406,6 +1448,7 @@
 	  if (!mappedKey) {
 	    return;
 	  }
+	  e.preventDefault();
 	  keyDown[mappedKey] = false;
 	});
 
@@ -1529,71 +1572,110 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function update(state) {
+	  var _this = this;
+
 	  this.hitbox.rotate(-this.rotation);
-	  this.dRotation += (0, _util.rand)(-0.005, 0.005);
-	  this.dRotation = (0, _util.clamp)(this.dRotation, -0.01, 0.01);
+
+	  this.speed = 1;
+
+	  if (state.wells) {
+	    state.wells.forEach(function (well) {
+	      var d = (0, _util.distance)(_this.position, well.position) / well.strength;
+	      _this.dX += (well.position.x - _this.position.x) / d * (0, _util.lerp)(1, 0.5, _this.size);
+	      _this.dY += (well.position.y - _this.position.y) / d * (0, _util.lerp)(1, 0.5, _this.size);
+	    });
+	  }
+	  if (state.playerWell) {
+	    var d = (0, _util.distance)(this.position, state.playerWell.position) / state.playerWell.strength;
+	    this.dX += (state.playerWell.position.x - this.position.x) / d * (0, _util.lerp)(1, 0.5, this.size);
+	    this.dY += (state.playerWell.position.y - this.position.y) / d * (0, _util.lerp)(1, 0.5, this.size);
+	  }
+	  this.dX *= 0.995;
+	  this.dY *= 0.995;
+	  this.dX += (0, _util.rand)(-0.03, 0.03);
+	  this.dY += (0, _util.rand)(-0.03, 0.03);
+
 	  this.rotation += this.dRotation;
 
-	  this.speed += (0, _util.rand)(-0.1, 0.1);
-	  this.speed *= 0.99;
-	  this.speed = (0, _util.clamp)(this.speed, 0, 1);
-
-	  var movement = this.speed * 2;
-	  var dX = Math.cos(this.rotation) * movement;
-	  var dY = Math.sin(this.rotation) * movement;
-	  this.position.x += dX;
-	  this.position.y += dY;
+	  this.position.x += this.dX;
+	  this.position.y += this.dY;
 
 	  this.alpha = 1;
 	  this.hitbox.setOffset(new _sat2.default.Vector(this.position.x, this.position.y));
 	  this.hitbox.rotate(this.rotation);
 
 	  if (this.intersectsWith(state.player)) {
-	    this.hitbox.rotate(-this.rotation);
+	    state.player.speed = 0;
 	    this.alpha = 0.5;
-	    this.rotation += 3;
-	    // state.reset();
-	    this.hitbox.setOffset(new _sat2.default.Vector(this.position.x, this.position.y));
-	    this.hitbox.rotate(this.rotation);
 	  }
 	}
 	function intersectsWith(sprite) {
 	  return _sat2.default.testPolygonPolygon(this.hitbox, sprite.hitbox);
 	}
 
+	var rgbToColor = function rgbToColor(r, g, b) {
+	  return r * 0xffff + g * 0xff + b;
+	};
+
 	exports.default = function (startingValues) {
 	  var PIXI = window.PIXI;
 	  var graphics = new PIXI.Graphics();
 
-	  graphics.beginFill((0, _util.rand)(0xffffff));
+	  var size = (0, _util.rand)(0.2, 1);
 
-	  var size = (0, _util.rand)(0.5, 1.5);
+	  var c1 = [146, 246, 226];
+	  var c2 = [228, 1, 110];
+	  // graphics.beginFill(rgbToColor(
+	  //   lerp(c1[0], c2[0], size),
+	  //   lerp(c1[1], c2[1], size),
+	  //   lerp(c1[2], c2[2], size)
+	  // ));
+	  graphics.beginFill(0);
 
-	  graphics.moveTo(0, 0);
-	  graphics.lineTo(100 * size, -50 * size);
-	  graphics.lineTo(100 * size, 50 * size);
-	  graphics.lineTo(0, 0);
+	  var vertices = [];
+	  var currentAngle = 0;
+	  while (currentAngle < Math.PI * 2) {
+	    var vertexSize = (0, _util.rand)(30, 60) * Math.pow(size, 2) * 4;
+	    vertices.push({
+	      x: Math.cos(currentAngle) * vertexSize,
+	      y: Math.sin(currentAngle) * vertexSize
+	    });
+	    currentAngle += (0, _util.rand)(0.2, 2);
+	  }
+	  var satVectors = [];
+
+	  graphics.moveTo(vertices[0].x, vertices[0].y);
+	  for (var i = 1; i < vertices.length; i += 1) {
+	    graphics.lineTo(vertices[i].x, vertices[i].y);
+	    satVectors.push(new _sat2.default.Vector(vertices[i].x, vertices[i].y));
+	  }
+	  graphics.lineTo(vertices[0].x, vertices[0].y);
+
 	  graphics.endFill();
 	  graphics.cacheAsBitmap = true;
 
-	  // const camera = Object.assign(new PIXI.Sprite(), startingValues);
-	  var camera = new PIXI.Sprite();
-	  camera.position = startingValues.position;
-	  camera.opacity = 0.5;
-	  camera.addChild(graphics);
-	  camera.anchor.y = camera.anchor.x = 0.5;
-	  camera.speed = 0;
-	  camera.dRotation = 0;
-	  camera.update = update.bind(camera);
-	  camera.intersectsWith = intersectsWith.bind(camera);
+	  var hitbox = new _sat2.default.Polygon(new _sat2.default.Vector(), satVectors);
 
-	  camera.hitbox = new _sat2.default.Polygon(new _sat2.default.Vector(), [new _sat2.default.Vector(), new _sat2.default.Vector(100 * size, 50 * size), new _sat2.default.Vector(100 * size, -50 * size)]);
+	  var floater = new PIXI.Sprite();
+	  floater.size = size;
+	  floater.position = startingValues.position;
+	  floater.opacity = 0.5;
+	  floater.addChild(graphics);
+	  floater.anchor.y = floater.anchor.x = 0.5;
+	  floater.speed = 0;
+	  floater.dX = 0;
+	  floater.dY = 0;
+	  floater.dRotation = (0, _util.rand)(-0.01, 0.01);
+	  floater.update = update.bind(floater);
+	  floater.intersectsWith = intersectsWith.bind(floater);
 
-	  camera.cacheAsBitmap = true;
+	  floater.hitbox = hitbox;
 
-	  (0, _draw.addToStage)(camera);
+	  floater.cacheAsBitmap = true;
 
-	  return camera;
+	  (0, _draw.addToStage)(floater);
+
+	  return floater;
 	};
 
 /***/ },
@@ -1629,14 +1711,6 @@
 	  if ((0, _input.isKeyDown)('MoveCameraDown')) {
 	    this.dY += 0.1;
 	  }
-	  if ((0, _input.isKeyDown)('ResetCamera')) {
-	    this.dX = 0;
-	    this.dY = 0;
-	    this.dZoom = 0;
-	    this.zoom = 1;
-	    this.x = state.player.position.x;
-	    this.y = state.player.position.y;
-	  }
 
 	  this.dX *= 0.9;
 	  this.dX = (0, _util.clamp)(this.dX, -1, 1);
@@ -1651,10 +1725,13 @@
 
 	  this.zoom *= 1 + this.dZoom;
 
-	  this.zoom = (0, _util.clamp)(this.zoom, 0.001, 1);
+	  this.zoom = (0, _util.clamp)(this.zoom, 0.0001, 1);
 
-	  this.x = (0, _util.lerp)(this.x, state.player.x, 0.04);
-	  this.y = (0, _util.lerp)(this.y, state.player.y, 0.04);
+	  var cameraTargetX = state.player.x + Math.cos(state.player.rotation) * state.player.speed * 200;
+	  var cameraTargetY = state.player.y + Math.sin(state.player.rotation) * state.player.speed * 200;
+
+	  this.x = (0, _util.lerp)(this.x, cameraTargetX, 0.02);
+	  this.y = (0, _util.lerp)(this.y, cameraTargetY, 0.02);
 	  this.zoom = (0, _util.lerp)(this.zoom, 1 - Math.pow(state.player.speed, 5), 0.01);
 	  this.zoom = (0, _util.clamp)(this.zoom, 0.001, 1);
 	}
@@ -1684,6 +1761,7 @@
 	});
 
 	exports.default = function (state) {
+	  state.playerWell = null;
 	  state.player.update(state);
 	  state.agents.forEach(function (agent) {
 	    return agent.update(state);

@@ -8,6 +8,10 @@ export const now = () => new Date().getTime();
 
 export const rand = (from, to = 0) => from + (Math.random() * (to - from));
 
+export const distance = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+
+export const direction = (p1, p2) => Math.atan2(p2.y - p1.y, p2.x - p1.x);
+
 export const throttle = (f, t) => {
   let lastCall = 0;
   return (...args) => {

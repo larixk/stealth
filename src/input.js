@@ -4,17 +4,23 @@ let mouseDown;
 const keyDown = {};
 
 const keyMapping = {
-  ' ': 'ResetCamera',
+  ' ': 'Pull',
+  Shift: 'Push',
   '-': 'ZoomCameraIn',
   '=': 'ZoomCameraOut',
-  ArrowUp: 'MoveCameraUp',
-  ArrowLeft: 'MoveCameraLeft',
-  ArrowDown: 'MoveCameraDown',
-  ArrowRight: 'MoveCameraRight',
+  // ArrowUp: 'MoveCameraUp',
+  // ArrowLeft: 'MoveCameraLeft',
+  // ArrowDown: 'MoveCameraDown',
+  // ArrowRight: 'MoveCameraRight',
+  ArrowUp: 'MovePlayerForward',
+  ArrowLeft: 'TurnPlayerLeft',
+  ArrowDown: 'MovePlayerBack',
+  ArrowRight: 'TurnPlayerRight',
   w: 'MovePlayerForward',
   a: 'TurnPlayerLeft',
   s: 'MovePlayerBack',
   d: 'TurnPlayerRight',
+
 };
 
 window.addEventListener('mousedown', () => {
@@ -36,6 +42,7 @@ window.addEventListener('keydown', (e) => {
     console.log('Unmapped key pressed', e.key);
     return;
   }
+  e.preventDefault();
   keyDown[mappedKey] = true;
 });
 
@@ -44,6 +51,7 @@ window.addEventListener('keyup', (e) => {
   if (!mappedKey) {
     return;
   }
+  e.preventDefault();
   keyDown[mappedKey] = false;
 });
 
