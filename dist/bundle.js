@@ -64,13 +64,18 @@
 
 	var _draw = __webpack_require__(10);
 
+	var _sound = __webpack_require__(15);
+
+	var _sound2 = _interopRequireDefault(_sound);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	(0, _load2.default)().then(function () {
 	  var _game = (0, _gameloop2.default)({
 	    msPerUpdate: 1000 / 60,
 	    update: _update2.default,
-	    draw: _draw.draw
+	    draw: _draw.draw,
+	    sound: _sound2.default
 	  }),
 	      setState = _game.setState;
 
@@ -157,6 +162,9 @@
 	  }
 	  if (options.state) {
 	    options.draw(options.state);
+	    if (options.sound) {
+	      options.sound(options.state);
+	    }
 	  }
 	  requestAnimationFrame(tick);
 	};
@@ -253,6 +261,7 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	exports.default = function () {
+	  var player = (0, _player2.default)();
 	  var agents = (0, _util.times)(500, function () {
 	    return (0, _floater2.default)({
 	      position: {
@@ -262,7 +271,7 @@
 	    });
 	  });
 	  return {
-	    player: (0, _player2.default)(),
+	    player: player,
 	    agents: agents,
 	    camera: (0, _camera2.default)()
 	  };
@@ -294,41 +303,52 @@
 	  this.hitbox.rotate(-this.rotation);
 
 	  if ((0, _input.isKeyDown)('TurnPlayerRight')) {
-	    this.rotation += (0, _util.lerp)(0, 0.02 * Math.PI, this.speed);
+	    this.rotation += (0, _util.lerp)(0.01, 0.06, this.speed);
 	  }
 	  if ((0, _input.isKeyDown)('TurnPlayerLeft')) {
-	    this.rotation -= (0, _util.lerp)(0, 0.02 * Math.PI, this.speed);
+	    this.rotation -= (0, _util.lerp)(0.01, 0.06, this.speed);
 	  }
 	  if ((0, _input.isKeyDown)('MovePlayerForward')) {
-	    this.speed += 0.1;
+	    this.speed += 0.05;
 	    this.speed = Math.min(1, this.speed);
 	  }
 	  if ((0, _input.isKeyDown)('MovePlayerBack')) {
 	    this.speed -= 0.1;
 	    this.speed = Math.max(-0.5, this.speed);
 	  }
-	  this.alpha = 1;
+	  this.pullEffect.alpha = 0;
 	  if ((0, _input.isKeyDown)('Pull')) {
-	    this.alpha = Math.random();
 	    state.playerWell = { position: this.position, strength: 0.5 };
+	    this.pullEffect.width = this.pullEffect.height /= 1.1;
+	    if (this.pullEffect.width < 100) {
+	      this.pullEffect.width = this.pullEffect.height = 200000;
+	    }
+	    this.pullEffect.alpha = 1;
 	  }
 	  if ((0, _input.isKeyDown)('Push')) {
-	    this.alpha = Math.random();
 	    state.playerWell = { position: this.position, strength: -1 };
+
+	    this.pullEffect.width = this.pullEffect.height *= 1.1;
+	    if (this.pullEffect.width > 200000) {
+	      this.pullEffect.width = this.pullEffect.height = 100;
+	    }
+	    this.pullEffect.alpha = 1;
 	  }
-	  if ((0, _input.isKeyDown)('Push')) {
-	    state.wells = null;
-	  }
-	  if ((0, _input.isKeyDown)('Pull')) {
-	    console.log('dropped at ', this.position);
-	    state.wells = [{
-	      position: {
-	        x: this.position.x,
-	        y: this.position.y
-	      },
-	      strength: 0.2
-	    }];
-	  }
+
+	  this.totalDistance = 0;
+	  // if (isKeyDown('Push')) {
+	  //   state.wells = null;
+	  // }
+	  // if (isKeyDown('Pull')) {
+	  //   console.log('dropped at ', this.position);
+	  //   state.wells = [{
+	  //     position: {
+	  //       x: this.position.x,
+	  //       y: this.position.y,
+	  //     },
+	  //     strength: 0.2,
+	  //   }];
+	  // }
 
 	  this.speed *= 0.95;
 	  if (Math.abs(this.speed) < 0.02) {
@@ -349,7 +369,7 @@
 	  var graphics = new PIXI.Graphics();
 
 	  var size = 2;
-	  graphics.beginFill(0x333333);
+	  graphics.beginFill(0x111111);
 
 	  graphics.moveTo(-10 * size, -6 * size);
 	  graphics.lineTo(10 * size, 0 * size);
@@ -357,14 +377,24 @@
 	  graphics.lineTo(-10 * size, -6 * size);
 	  graphics.endFill();
 
+	  var pullEffect = new PIXI.Graphics();
+
+	  pullEffect.beginFill(0, 0);
+	  pullEffect.lineStyle(200, 0xbbbbbb, 1);
+	  pullEffect.drawCircle(0, 0, 500);
+	  pullEffect.endFill();
+
 	  var player = new PIXI.Sprite();
 	  player.addChild(graphics);
+	  player.addChild(pullEffect);
+	  player.pullEffect = pullEffect;
 	  player.speed = 0;
 	  player.update = update.bind(player);
 
 	  player.hitbox = new _sat2.default.Polygon(new _sat2.default.Vector(), [new _sat2.default.Vector(5, 0), new _sat2.default.Vector(-5, 3), new _sat2.default.Vector(-5, -3)]);
 
 	  (0, _draw.addToStage)(player);
+
 	  return player;
 	};
 
@@ -1402,7 +1432,9 @@
 
 	var keyMapping = {
 	  ' ': 'Pull',
+	  Control: 'Pull',
 	  Shift: 'Push',
+	  Enter: 'Pull',
 	  '-': 'ZoomCameraIn',
 	  '=': 'ZoomCameraOut',
 	  // ArrowUp: 'MoveCameraUp',
@@ -1416,8 +1448,11 @@
 	  w: 'MovePlayerForward',
 	  a: 'TurnPlayerLeft',
 	  s: 'MovePlayerBack',
-	  d: 'TurnPlayerRight'
-
+	  d: 'TurnPlayerRight',
+	  W: 'MovePlayerForward',
+	  A: 'TurnPlayerLeft',
+	  S: 'MovePlayerBack',
+	  D: 'TurnPlayerRight'
 	};
 
 	window.addEventListener('mousedown', function () {
@@ -1489,7 +1524,7 @@
 	renderer.autoResize = true;
 
 	renderer.view.style.display = 'block';
-	renderer.backgroundColor = 0xffffff;
+	renderer.backgroundColor = 0xcccccc;
 	document.body.appendChild(renderer.view);
 	document.body.style.margin = 0;
 
@@ -1590,6 +1625,7 @@
 	    this.dX += (state.playerWell.position.x - this.position.x) / d * (0, _util.lerp)(1, 0.5, this.size);
 	    this.dY += (state.playerWell.position.y - this.position.y) / d * (0, _util.lerp)(1, 0.5, this.size);
 	  }
+	  state.player.totalDistance += (0, _util.distance)(this.position, state.player.position);
 	  this.dX *= 0.995;
 	  this.dY *= 0.995;
 	  this.dX += (0, _util.rand)(-0.03, 0.03);
@@ -1600,22 +1636,16 @@
 	  this.position.x += this.dX;
 	  this.position.y += this.dY;
 
-	  this.alpha = 1;
 	  this.hitbox.setOffset(new _sat2.default.Vector(this.position.x, this.position.y));
 	  this.hitbox.rotate(this.rotation);
 
 	  if (this.intersectsWith(state.player)) {
 	    state.player.speed = 0;
-	    this.alpha = 0.5;
 	  }
 	}
 	function intersectsWith(sprite) {
 	  return _sat2.default.testPolygonPolygon(this.hitbox, sprite.hitbox);
 	}
-
-	var rgbToColor = function rgbToColor(r, g, b) {
-	  return r * 0xffff + g * 0xff + b;
-	};
 
 	exports.default = function (startingValues) {
 	  var PIXI = window.PIXI;
@@ -1623,13 +1653,6 @@
 
 	  var size = (0, _util.rand)(0.2, 1);
 
-	  var c1 = [146, 246, 226];
-	  var c2 = [228, 1, 110];
-	  // graphics.beginFill(rgbToColor(
-	  //   lerp(c1[0], c2[0], size),
-	  //   lerp(c1[1], c2[1], size),
-	  //   lerp(c1[2], c2[2], size)
-	  // ));
 	  graphics.beginFill(0);
 
 	  var vertices = [];
@@ -1640,7 +1663,7 @@
 	      x: Math.cos(currentAngle) * vertexSize,
 	      y: Math.sin(currentAngle) * vertexSize
 	    });
-	    currentAngle += (0, _util.rand)(0.2, 2);
+	    currentAngle += (0, _util.rand)(0.2, 1);
 	  }
 	  var satVectors = [];
 
@@ -1767,7 +1790,39 @@
 	    return agent.update(state);
 	  });
 	  state.camera.update(state);
+	  console.log(state.player.totalDistance);
 	  return state;
+	};
+
+/***/ },
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _util = __webpack_require__(3);
+
+	var ctx = new (AudioContext || webkitAudioContext)();
+
+	var oscillator = ctx.createOscillator();
+	var gainNode = ctx.createGain();
+
+	oscillator.type = 'sine';
+
+	oscillator.connect(gainNode);
+	gainNode.connect(ctx.destination);
+
+	oscillator.frequency.value = 0;
+
+	oscillator.start(0);
+
+	exports.default = function (state) {
+	  oscillator.frequency.value = (0, _util.lerp)(110, 440, Math.pow(state.player.speed, 2));
+	  gainNode.gain.value = state.camera.zoom;
 	};
 
 /***/ }
