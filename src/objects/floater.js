@@ -19,6 +19,7 @@ function update(state) {
     this.dX += (state.playerWell.position.x - this.position.x) / d * lerp(1, 0.5, this.size);
     this.dY += (state.playerWell.position.y - this.position.y) / d * lerp(1, 0.5, this.size);
   }
+  state.player.totalDistance += distance(this.position, state.player.position);
   this.dX *= 0.995;
   this.dY *= 0.995;
   this.dX += rand(-0.03, 0.03);
@@ -29,20 +30,16 @@ function update(state) {
   this.position.x += this.dX;
   this.position.y += this.dY;
 
-  this.alpha = 1;
   this.hitbox.setOffset(new SAT.Vector(this.position.x, this.position.y));
   this.hitbox.rotate(this.rotation);
 
   if (this.intersectsWith(state.player)) {
     state.player.speed = 0;
-    this.alpha = 0.5;
   }
 }
 function intersectsWith(sprite) {
   return SAT.testPolygonPolygon(this.hitbox, sprite.hitbox);
 }
-
-const rgbToColor = (r, g, b) => (r * 0xffff) + (g * 0xff) + b;
 
 export default (startingValues) => {
   const PIXI = window.PIXI;
@@ -50,13 +47,6 @@ export default (startingValues) => {
 
   const size = rand(0.2, 1);
 
-  const c1 = [146, 246, 226];
-  const c2 = [228, 1, 110];
-  // graphics.beginFill(rgbToColor(
-  //   lerp(c1[0], c2[0], size),
-  //   lerp(c1[1], c2[1], size),
-  //   lerp(c1[2], c2[2], size)
-  // ));
   graphics.beginFill(0);
 
   const vertices = [];
@@ -67,7 +57,7 @@ export default (startingValues) => {
       x: Math.cos(currentAngle) * vertexSize,
       y: Math.sin(currentAngle) * vertexSize,
     });
-    currentAngle += rand(0.2, 2);
+    currentAngle += rand(0.2, 1);
   }
   const satVectors = [];
 

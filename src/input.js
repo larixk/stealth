@@ -5,7 +5,9 @@ const keyDown = {};
 
 const keyMapping = {
   ' ': 'Pull',
+  Control: 'Pull',
   Shift: 'Push',
+  Enter: 'Pull',
   '-': 'ZoomCameraIn',
   '=': 'ZoomCameraOut',
   // ArrowUp: 'MoveCameraUp',
@@ -20,7 +22,10 @@ const keyMapping = {
   a: 'TurnPlayerLeft',
   s: 'MovePlayerBack',
   d: 'TurnPlayerRight',
-
+  W: 'MovePlayerForward',
+  A: 'TurnPlayerLeft',
+  S: 'MovePlayerBack',
+  D: 'TurnPlayerRight',
 };
 
 window.addEventListener('mousedown', () => {

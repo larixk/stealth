@@ -9,7 +9,7 @@ const renderer = new PIXI.WebGLRenderer(800, 600);
 renderer.autoResize = true;
 
 renderer.view.style.display = 'block';
-renderer.backgroundColor = 0xffffff;
+renderer.backgroundColor = 0xcccccc;
 document.body.appendChild(renderer.view);
 document.body.style.margin = 0;
 

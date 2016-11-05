@@ -1,9 +1,10 @@
-import player from './objects/player';
+import createPlayer from './objects/player';
 import floater from './objects/floater';
 import worldCamera from './camera';
 import { rand, times } from './util';
 
 export default () => {
+  const player = createPlayer();
   const agents = times(500, () => floater({
     position: {
       x: rand(1000, 6000),
@@ -11,7 +12,7 @@ export default () => {
     },
   }));
   return {
-    player: player(),
+    player,
     agents,
     camera: worldCamera(),
   };
