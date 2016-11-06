@@ -10,15 +10,17 @@ function update(state) {
   if (state.wells) {
     state.wells.forEach((well) => {
       const d = distance(this.position, well.position) / well.strength;
-      this.dX += (well.position.x - this.position.x) / d * lerp(1, 0.5, this.size);
-      this.dY += (well.position.y - this.position.y) / d * lerp(1, 0.5, this.size);
+      this.dX += ((well.position.x - this.position.x) / Math.pow(d, 2)) * ((1 - this.size) * 1000);
+      this.dY += ((well.position.y - this.position.y) / Math.pow(d, 2)) * ((1 - this.size) * 1000);
     });
   }
+  this.distanceToPlayer = distance(this.position, state.player.position);
   if (state.playerWell) {
-    const d = distance(this.position, state.playerWell.position) / state.playerWell.strength;
-    this.dX += (state.playerWell.position.x - this.position.x) / d * lerp(1, 0.5, this.size);
-    this.dY += (state.playerWell.position.y - this.position.y) / d * lerp(1, 0.5, this.size);
+    const speed = (this.distanceToPlayer / state.playerWell.strength) * lerp(1, 0.5, this.size);
+    this.dX += (state.playerWell.position.x - this.position.x) / speed;
+    this.dY += (state.playerWell.position.y - this.position.y) / speed;
   }
+
   state.player.totalDistance += distance(this.position, state.player.position);
   this.dX *= 0.995;
   this.dY *= 0.995;
@@ -34,12 +36,18 @@ function update(state) {
   this.hitbox.rotate(this.rotation);
 
   if (this.intersectsWith(state.player)) {
-    state.player.speed = 0;
+    // const dX = Math.cos(state.player.rotation) * 10 * this.size;
+    // const dY = Math.sin(state.player.rotation) * 10 * this.size;
+    // state.player.position.x -= dX;
+    // state.player.position.y -= dY;
+    state.player.speed = 0.1;
   }
 }
 function intersectsWith(sprite) {
   return SAT.testPolygonPolygon(this.hitbox, sprite.hitbox);
 }
+
+const rgbToColor = (r, g, b) => r * 0xffff + g * 0xff + b;
 
 export default (startingValues) => {
   const PIXI = window.PIXI;
@@ -47,17 +55,18 @@ export default (startingValues) => {
 
   const size = rand(0.2, 1);
 
-  graphics.beginFill(0);
+  graphics.beginFill(0x111111);
+  // graphics.beginFill(rgbToColor(0xff * size, 0xff * size, 0xff * size));
 
   const vertices = [];
   let currentAngle = 0;
   while (currentAngle < Math.PI * 2) {
-    const vertexSize = rand(30, 60) * Math.pow(size, 2) * 4;
+    const vertexSize = rand(40, 60) * Math.pow(size, 2) * 4;
     vertices.push({
       x: Math.cos(currentAngle) * vertexSize,
       y: Math.sin(currentAngle) * vertexSize,
     });
-    currentAngle += rand(0.2, 1);
+    currentAngle += rand(0.5, 1);
   }
   const satVectors = [];
 

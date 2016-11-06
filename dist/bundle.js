@@ -1796,33 +1796,33 @@
 
 /***/ },
 /* 15 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	'use strict';
+	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var _util = __webpack_require__(3);
+	// import { lerp } from './util';
 
-	var ctx = new (AudioContext || webkitAudioContext)();
+	// const ctx = new (AudioContext || webkitAudioContext)();
 
-	var oscillator = ctx.createOscillator();
-	var gainNode = ctx.createGain();
+	// const oscillator = ctx.createOscillator();
+	// const gainNode = ctx.createGain();
 
-	oscillator.type = 'sine';
+	// oscillator.type = 'sine';
 
-	oscillator.connect(gainNode);
-	gainNode.connect(ctx.destination);
+	// oscillator.connect(gainNode);
+	// gainNode.connect(ctx.destination);
 
-	oscillator.frequency.value = 0;
+	// oscillator.frequency.value = 0;
 
-	oscillator.start(0);
+	// oscillator.start(0);
 
 	exports.default = function (state) {
-	  oscillator.frequency.value = (0, _util.lerp)(110, 440, Math.pow(state.player.speed, 2));
-	  gainNode.gain.value = state.camera.zoom;
+	  //   oscillator.frequency.value = lerp(110, 130, Math.pow(state.player.speed, 2));
+	  //   gainNode.gain.value = state.camera.zoom;
 	};
 
 /***/ }

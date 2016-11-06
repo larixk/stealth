@@ -10,6 +10,7 @@ renderer.autoResize = true;
 
 renderer.view.style.display = 'block';
 renderer.backgroundColor = 0xcccccc;
+renderer.backgroundColor = 0xffffff;
 document.body.appendChild(renderer.view);
 document.body.style.margin = 0;
 

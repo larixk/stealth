@@ -58,7 +58,7 @@ function update(state) {
   if (Math.abs(this.speed) < 0.02) {
     this.speed = 0;
   }
-  const movement = this.speed * 15;
+  const movement = this.speed * 20;
   const dX = Math.cos(this.rotation) * movement;
   const dY = Math.sin(this.rotation) * movement;
   this.position.x += dX;
