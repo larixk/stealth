@@ -10,20 +10,24 @@ function update(state) {
   if (state.wells) {
     state.wells.forEach((well) => {
       const d = distance(this.position, well.position) / well.strength;
-      this.dX += ((well.position.x - this.position.x) / Math.pow(d, 2)) * ((1 - this.size) * 1000);
-      this.dY += ((well.position.y - this.position.y) / Math.pow(d, 2)) * ((1 - this.size) * 1000);
+      this.dX += ((well.position.x - this.position.x) / Math.pow(d, 2)) * ((1 - this.size) * 300);
+      this.dY += ((well.position.y - this.position.y) / Math.pow(d, 2)) * ((1 - this.size) * 300);
     });
   }
   this.distanceToPlayer = distance(this.position, state.player.position);
   if (state.playerWell) {
-    const speed = (this.distanceToPlayer / state.playerWell.strength) * lerp(1, 0.5, this.size);
+    const speed = (Math.pow(this.distanceToPlayer, 2) / state.playerWell.strength) * lerp(1, 0.5, this.size) * (1 / 1000);
     this.dX += (state.playerWell.position.x - this.position.x) / speed;
     this.dY += (state.playerWell.position.y - this.position.y) / speed;
+
+    // const d = distance(this.position, state.playerWell.position);
+    // this.dX += ((state.playerWell.position.x - this.position.x) / Math.pow(d, 2)) * ((1 - this.size) * 300);
+    // this.dY += ((state.playerWell.position.y - this.position.y) / Math.pow(d, 2)) * ((1 - this.size) * 300);
   }
 
   state.player.totalDistance += distance(this.position, state.player.position);
-  this.dX *= 0.995;
-  this.dY *= 0.995;
+  // this.dX *= lerp(0.99, 1, this.size);
+  // this.dY *= lerp(0.99, 1, this.size);
   this.dX += rand(-0.03, 0.03);
   this.dY += rand(-0.03, 0.03);
 
@@ -40,7 +44,8 @@ function update(state) {
     // const dY = Math.sin(state.player.rotation) * 10 * this.size;
     // state.player.position.x -= dX;
     // state.player.position.y -= dY;
-    state.player.speed = 0.1;
+    state.player.speed = 0;
+    // location.reload();
   }
 }
 function intersectsWith(sprite) {
@@ -61,7 +66,7 @@ export default (startingValues) => {
   const vertices = [];
   let currentAngle = 0;
   while (currentAngle < Math.PI * 2) {
-    const vertexSize = rand(40, 60) * Math.pow(size, 2) * 4;
+    const vertexSize = rand(40, 60) * Math.pow(size, 2) * 5;
     vertices.push({
       x: Math.cos(currentAngle) * vertexSize,
       y: Math.sin(currentAngle) * vertexSize,

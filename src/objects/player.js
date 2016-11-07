@@ -1,5 +1,5 @@
 import SAT from 'sat';
-import { lerp } from '../util';
+import { lerp, distance } from '../util';
 import { isKeyDown } from '../input';
 import { addToStage } from '../draw';
 
@@ -8,12 +8,15 @@ function update(state) {
 
   if (isKeyDown('TurnPlayerRight')) {
     this.rotation += lerp(0.01, 0.06, this.speed);
+    this.rotation %= Math.PI * 2;
   }
   if (isKeyDown('TurnPlayerLeft')) {
     this.rotation -= lerp(0.01, 0.06, this.speed);
+    this.rotation += Math.PI * 2;
+    this.rotation %= Math.PI * 2;
   }
   if (isKeyDown('MovePlayerForward')) {
-    this.speed += 0.05;
+    this.speed += 0.03;
     this.speed = Math.min(1, this.speed);
   }
   if (isKeyDown('MovePlayerBack')) {
@@ -54,11 +57,11 @@ function update(state) {
   //   }];
   // }
 
-  this.speed *= 0.95;
+  this.speed *= 0.97;
   if (Math.abs(this.speed) < 0.02) {
     this.speed = 0;
   }
-  const movement = this.speed * 20;
+  const movement = this.speed * 30;
   const dX = Math.cos(this.rotation) * movement;
   const dY = Math.sin(this.rotation) * movement;
   this.position.x += dX;
@@ -93,6 +96,9 @@ export default () => {
   player.addChild(pullEffect);
   player.pullEffect = pullEffect;
   player.speed = 0;
+  player.size = 0.1;
+  player.dX = 0;
+  player.dY = 0;
   player.update = update.bind(player);
 
   player.hitbox = new SAT.Polygon(new SAT.Vector(), [

@@ -1,5 +1,7 @@
 export const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
+export const sample = (array) => array[Math.floor(Math.random() * array.length)];
+
 export const lerp = (a, b, t) => a + (t * (b - a));
 
 export const noop = a => a;

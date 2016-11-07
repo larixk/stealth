@@ -58,13 +58,13 @@
 
 	var _initialState2 = _interopRequireDefault(_initialState);
 
-	var _update = __webpack_require__(14);
+	var _update = __webpack_require__(15);
 
 	var _update2 = _interopRequireDefault(_update);
 
 	var _draw = __webpack_require__(10);
 
-	var _sound = __webpack_require__(15);
+	var _sound = __webpack_require__(16);
 
 	var _sound2 = _interopRequireDefault(_sound);
 
@@ -189,6 +189,10 @@
 	  return Math.min(max, Math.max(min, n));
 	};
 
+	var sample = exports.sample = function sample(array) {
+	  return array[Math.floor(Math.random() * array.length)];
+	};
+
 	var lerp = exports.lerp = function lerp(a, b, t) {
 	  return a + t * (b - a);
 	};
@@ -252,7 +256,11 @@
 
 	var _floater2 = _interopRequireDefault(_floater);
 
-	var _camera = __webpack_require__(13);
+	var _attractor = __webpack_require__(13);
+
+	var _attractor2 = _interopRequireDefault(_attractor);
+
+	var _camera = __webpack_require__(14);
 
 	var _camera2 = _interopRequireDefault(_camera);
 
@@ -262,17 +270,30 @@
 
 	exports.default = function () {
 	  var player = (0, _player2.default)();
-	  var agents = (0, _util.times)(500, function () {
+	  var agents = (0, _util.times)(2000, function () {
+	    var direction = (0, _util.rand)(Math.PI * 2);
+	    var distance = (0, _util.rand)(2000, 50000);
 	    return (0, _floater2.default)({
 	      position: {
-	        x: (0, _util.rand)(1000, 6000),
-	        y: (0, _util.rand)(-3000, 3000)
+	        x: Math.sin(direction) * distance,
+	        y: Math.cos(direction) * distance
+	      }
+	    });
+	  });
+	  var wells = (0, _util.times)(7, function () {
+	    var direction = (0, _util.rand)(Math.PI * 2);
+	    var distance = (0, _util.rand)(2000, 100000);
+	    return (0, _attractor2.default)({
+	      position: {
+	        x: Math.sin(direction) * distance,
+	        y: Math.cos(direction) * distance
 	      }
 	    });
 	  });
 	  return {
 	    player: player,
 	    agents: agents,
+	    wells: wells,
 	    camera: (0, _camera2.default)()
 	  };
 	};
@@ -304,12 +325,15 @@
 
 	  if ((0, _input.isKeyDown)('TurnPlayerRight')) {
 	    this.rotation += (0, _util.lerp)(0.01, 0.06, this.speed);
+	    this.rotation %= Math.PI * 2;
 	  }
 	  if ((0, _input.isKeyDown)('TurnPlayerLeft')) {
 	    this.rotation -= (0, _util.lerp)(0.01, 0.06, this.speed);
+	    this.rotation += Math.PI * 2;
+	    this.rotation %= Math.PI * 2;
 	  }
 	  if ((0, _input.isKeyDown)('MovePlayerForward')) {
-	    this.speed += 0.05;
+	    this.speed += 0.03;
 	    this.speed = Math.min(1, this.speed);
 	  }
 	  if ((0, _input.isKeyDown)('MovePlayerBack')) {
@@ -350,11 +374,11 @@
 	  //   }];
 	  // }
 
-	  this.speed *= 0.95;
+	  this.speed *= 0.97;
 	  if (Math.abs(this.speed) < 0.02) {
 	    this.speed = 0;
 	  }
-	  var movement = this.speed * 15;
+	  var movement = this.speed * 30;
 	  var dX = Math.cos(this.rotation) * movement;
 	  var dY = Math.sin(this.rotation) * movement;
 	  this.position.x += dX;
@@ -389,6 +413,9 @@
 	  player.addChild(pullEffect);
 	  player.pullEffect = pullEffect;
 	  player.speed = 0;
+	  player.size = 0.1;
+	  player.dX = 0;
+	  player.dY = 0;
 	  player.update = update.bind(player);
 
 	  player.hitbox = new _sat2.default.Polygon(new _sat2.default.Vector(), [new _sat2.default.Vector(5, 0), new _sat2.default.Vector(-5, 3), new _sat2.default.Vector(-5, -3)]);
@@ -1525,6 +1552,7 @@
 
 	renderer.view.style.display = 'block';
 	renderer.backgroundColor = 0xcccccc;
+	renderer.backgroundColor = 0xffffff;
 	document.body.appendChild(renderer.view);
 	document.body.style.margin = 0;
 
@@ -1616,18 +1644,24 @@
 	  if (state.wells) {
 	    state.wells.forEach(function (well) {
 	      var d = (0, _util.distance)(_this.position, well.position) / well.strength;
-	      _this.dX += (well.position.x - _this.position.x) / d * (0, _util.lerp)(1, 0.5, _this.size);
-	      _this.dY += (well.position.y - _this.position.y) / d * (0, _util.lerp)(1, 0.5, _this.size);
+	      _this.dX += (well.position.x - _this.position.x) / Math.pow(d, 2) * ((1 - _this.size) * 300);
+	      _this.dY += (well.position.y - _this.position.y) / Math.pow(d, 2) * ((1 - _this.size) * 300);
 	    });
 	  }
+	  this.distanceToPlayer = (0, _util.distance)(this.position, state.player.position);
 	  if (state.playerWell) {
-	    var d = (0, _util.distance)(this.position, state.playerWell.position) / state.playerWell.strength;
-	    this.dX += (state.playerWell.position.x - this.position.x) / d * (0, _util.lerp)(1, 0.5, this.size);
-	    this.dY += (state.playerWell.position.y - this.position.y) / d * (0, _util.lerp)(1, 0.5, this.size);
+	    var speed = Math.pow(this.distanceToPlayer, 2) / state.playerWell.strength * (0, _util.lerp)(1, 0.5, this.size) * (1 / 1000);
+	    this.dX += (state.playerWell.position.x - this.position.x) / speed;
+	    this.dY += (state.playerWell.position.y - this.position.y) / speed;
+
+	    // const d = distance(this.position, state.playerWell.position);
+	    // this.dX += ((state.playerWell.position.x - this.position.x) / Math.pow(d, 2)) * ((1 - this.size) * 300);
+	    // this.dY += ((state.playerWell.position.y - this.position.y) / Math.pow(d, 2)) * ((1 - this.size) * 300);
 	  }
+
 	  state.player.totalDistance += (0, _util.distance)(this.position, state.player.position);
-	  this.dX *= 0.995;
-	  this.dY *= 0.995;
+	  // this.dX *= lerp(0.99, 1, this.size);
+	  // this.dY *= lerp(0.99, 1, this.size);
 	  this.dX += (0, _util.rand)(-0.03, 0.03);
 	  this.dY += (0, _util.rand)(-0.03, 0.03);
 
@@ -1640,12 +1674,21 @@
 	  this.hitbox.rotate(this.rotation);
 
 	  if (this.intersectsWith(state.player)) {
+	    // const dX = Math.cos(state.player.rotation) * 10 * this.size;
+	    // const dY = Math.sin(state.player.rotation) * 10 * this.size;
+	    // state.player.position.x -= dX;
+	    // state.player.position.y -= dY;
 	    state.player.speed = 0;
+	    // location.reload();
 	  }
 	}
 	function intersectsWith(sprite) {
 	  return _sat2.default.testPolygonPolygon(this.hitbox, sprite.hitbox);
 	}
+
+	var rgbToColor = function rgbToColor(r, g, b) {
+	  return r * 0xffff + g * 0xff + b;
+	};
 
 	exports.default = function (startingValues) {
 	  var PIXI = window.PIXI;
@@ -1653,17 +1696,18 @@
 
 	  var size = (0, _util.rand)(0.2, 1);
 
-	  graphics.beginFill(0);
+	  graphics.beginFill(0x111111);
+	  // graphics.beginFill(rgbToColor(0xff * size, 0xff * size, 0xff * size));
 
 	  var vertices = [];
 	  var currentAngle = 0;
 	  while (currentAngle < Math.PI * 2) {
-	    var vertexSize = (0, _util.rand)(30, 60) * Math.pow(size, 2) * 4;
+	    var vertexSize = (0, _util.rand)(40, 60) * Math.pow(size, 2) * 5;
 	    vertices.push({
 	      x: Math.cos(currentAngle) * vertexSize,
 	      y: Math.sin(currentAngle) * vertexSize
 	    });
-	    currentAngle += (0, _util.rand)(0.2, 1);
+	    currentAngle += (0, _util.rand)(0.5, 1);
 	  }
 	  var satVectors = [];
 
@@ -1703,6 +1747,45 @@
 
 /***/ },
 /* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _util = __webpack_require__(3);
+
+	function update(state) {
+	  var _this = this;
+
+	  if (state.wells) {
+	    state.wells.forEach(function (well) {
+	      var d = (0, _util.distance)(_this.position, well.position) / well.strength;
+	      _this.dX += (well.position.x - _this.position.x) / Math.pow(d, 2) * ((1 - _this.size) * 500);
+	      _this.dY += (well.position.y - _this.position.y) / Math.pow(d, 2) * ((1 - _this.size) * 500);
+	    });
+	  }
+	  this.position.x += this.dX;
+	  this.position.y += this.dY;
+	}
+
+	exports.default = function (_ref) {
+	  var position = _ref.position;
+
+	  var attractor = {
+	    position: position,
+	    strength: (0, _util.rand)(0.1, 0.6),
+	    size: 1
+	  };
+
+	  attractor.update = update.bind(attractor);
+	  return attractor;
+	};
+
+/***/ },
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1755,8 +1838,8 @@
 
 	  this.x = (0, _util.lerp)(this.x, cameraTargetX, 0.02);
 	  this.y = (0, _util.lerp)(this.y, cameraTargetY, 0.02);
-	  this.zoom = (0, _util.lerp)(this.zoom, 1 - Math.pow(state.player.speed, 5), 0.01);
-	  this.zoom = (0, _util.clamp)(this.zoom, 0.001, 1);
+	  this.zoom = (0, _util.lerp)(this.zoom, 1 - Math.pow(state.player.speed, 2), 0.01);
+	  this.zoom = (0, _util.clamp)(this.zoom, 0.2, 0.5);
 	}
 
 	exports.default = function () {
@@ -1774,7 +1857,7 @@
 	};
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -1790,37 +1873,151 @@
 	    return agent.update(state);
 	  });
 	  state.camera.update(state);
-	  console.log(state.player.totalDistance);
+	  // console.log(state.player.totalDistance);
 	  return state;
 	};
 
 /***/ },
-/* 15 */
-/***/ function(module, exports) {
+/* 16 */
+/***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	// import { lerp } from './util';
+	var _util = __webpack_require__(3);
 
-	// const ctx = new (AudioContext || webkitAudioContext)();
+	var ctx = new (AudioContext || webkitAudioContext)();
 
-	// const oscillator = ctx.createOscillator();
-	// const gainNode = ctx.createGain();
+	var notes = {
+	  c: 16.35,
+	  cSharp: 17.32,
+	  d: 18.35,
+	  eFlat: 19.45,
+	  e: 20.60,
+	  f: 21.83,
+	  fSharp: 23.12,
+	  g: 24.50,
+	  gSharp: 25.96,
+	  a: 27.50,
+	  bFlat: 29.14,
+	  b: 30.87
+	};
 
-	// oscillator.type = 'sine';
+	var chords = {
+	  gMajor: {
+	    chord: [notes.g, notes.b, notes.d],
+	    next: ['cMinor']
+	  },
+	  cMinor: {
+	    chord: [notes.c, notes.eFlat, notes.g],
+	    next: ['gMinor']
+	  },
+	  gMinor: {
+	    chord: [notes.d, notes.bFlat, notes.g],
+	    next: ['cMajor']
+	  },
+	  cMajor: {
+	    chord: [notes.c, notes.e, notes.g],
+	    next: ['fMajor', 'bFlatMajor']
+	  },
+	  fMajor: {
+	    chord: [notes.f, notes.c, notes.a],
+	    next: ['bFlatMajor']
+	  },
+	  bFlatMajor: {
+	    chord: [notes.bFlat, notes.d, notes.f],
+	    next: ['aMinor']
+	  },
+	  aMinor: {
+	    chord: [notes.a, notes.c, notes.e],
+	    next: ['gMinor']
+	  },
+	  dMajor: {
+	    chord: [notes.c, notes.a, notes.d, notes.fSharp],
+	    next: ['gMajor']
+	  }
+	};
+	var currentScale = chords.gMajor;
+	setInterval(function () {
+	  var next = (0, _util.sample)(currentScale.next);
+	  console.log(next);
+	  currentScale = chords[next];
+	}, 4000);
 
-	// oscillator.connect(gainNode);
-	// gainNode.connect(ctx.destination);
+	var synths = (0, _util.times)(8, function () {
+	  var oscillator = ctx.createOscillator();
+	  var gainNode = ctx.createGain();
+	  var panNode = ctx.createStereoPanner();
+	  var biquadFilter = ctx.createBiquadFilter();
 
-	// oscillator.frequency.value = 0;
+	  oscillator.type = 'sine';
+	  oscillator.detune.value = 100;
 
-	// oscillator.start(0);
+	  // biquadFilter.type = 'lowshelf';
+	  // biquadFilter.frequency.value = 80;
+	  // biquadFilter.gain.value = 10;
+
+	  oscillator.connect(gainNode);
+	  // biquadFilter.connect(gainNode);
+	  gainNode.connect(panNode);
+	  panNode.connect(ctx.destination);
+
+	  gainNode.gain.value = 0;
+	  oscillator.frequency.value = 0;
+
+	  oscillator.start(0);
+	  return {
+	    setFrequency: function setFrequency(f) {
+	      oscillator.frequency.value = f; //lerp(oscillator.frequency.value, f, 0.5);
+	    },
+	    setVolume: function setVolume(v) {
+	      gainNode.gain.value = v;
+	    },
+	    setPan: function setPan(p) {
+	      panNode.pan.value = p;
+	    }
+	  };
+	});
+
+	var roundToC = function roundToC(frequency) {
+	  var chord = currentScale.chord;
+	  var calculatedFreqency = void 0;
+	  for (var i = 2; i < 8; i++) {
+	    for (var j = 0; j < chord.length; j++) {
+	      var baseNote = chord[j];
+	      calculatedFreqency = Math.pow(2, i) * baseNote;
+	      if (calculatedFreqency > frequency) {
+	        return calculatedFreqency;
+	      }
+	    }
+	  }
+	  return calculatedFreqency;
+	};
 
 	exports.default = function (state) {
+	  state.agents.sort(function (agent1, agent2) {
+	    return agent1.distanceToPlayer - agent2.distanceToPlayer;
+	  }).slice(0, synths.length).forEach(function (agent, i) {
+	    var previousDistance = agent.previousDistance;
+	    var doppler = previousDistance ? agent.distanceToPlayer - previousDistance : 0;
+	    agent.previousDistance = agent.distanceToPlayer;
+	    var frequency = (0, _util.lerp)(220, 1400, Math.pow(1 - agent.size, 2)) - doppler * 10;
+	    var frequencyRoundedToC = roundToC(frequency);
+
+	    synths[i].setFrequency(frequencyRoundedToC);
+	    // synths[i].setFrequency(frequency);
+	    var distanceFactor = Math.min(1, 1 / Math.pow(agent.distanceToPlayer, 2) * 1000);
+	    synths[i].setVolume((0, _util.lerp)(0, 0.4, agent.size * distanceFactor));
+
+	    var angleFromPlayerToAgent = ((0, _util.direction)(agent, state.player) / (Math.PI * 2) + 2.5) % 1;
+	    var playerRotation = state.player.rotation / (Math.PI * 2);
+	    var directionFromPlayerToAgent = (angleFromPlayerToAgent - playerRotation + 1) % 1;
+	    var pan = directionFromPlayerToAgent < 0.5 ? (Math.abs(directionFromPlayerToAgent - 0.25) - 0.25) * -4 : (Math.abs(directionFromPlayerToAgent - 0.75) - 0.25) * 4;
+	    synths[i].setPan(pan);
+	  });
 	  //   oscillator.frequency.value = lerp(110, 130, Math.pow(state.player.speed, 2));
 	  //   gainNode.gain.value = state.camera.zoom;
 	};

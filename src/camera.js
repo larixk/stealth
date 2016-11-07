@@ -41,8 +41,8 @@ function update(state) {
 
   this.x = lerp(this.x, cameraTargetX, 0.02);
   this.y = lerp(this.y, cameraTargetY, 0.02);
-  this.zoom = lerp(this.zoom, 1 - Math.pow(state.player.speed, 5), 0.01);
-  this.zoom = clamp(this.zoom, 0.001, 1);
+  this.zoom = lerp(this.zoom, 1 - Math.pow(state.player.speed, 2), 0.01);
+  this.zoom = clamp(this.zoom, 0.2, 0.5);
 }
 export default () => {
   const camera = {

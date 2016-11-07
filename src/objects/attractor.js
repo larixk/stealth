@@ -12,12 +12,9 @@ function update(state) {
   this.position.y += this.dY;
 }
 
-export default () => {
+export default ({ position }) => {
   const attractor = {
-    position: {
-      x: rand(100000),
-      y: rand(100000),
-    },
+    position,
     strength: rand(0.1, 0.6),
     size: 1,
   };
