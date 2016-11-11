@@ -2,6 +2,6 @@ export default () => new Promise((resolve) => {
   const PIXI = window.PIXI;
 
   PIXI.loader
-    .add('img/player.png')
+    .add('img/paper-noise.jpg')
     .load(resolve);
 });

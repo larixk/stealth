@@ -6,9 +6,10 @@ import { rand, times } from './util';
 
 export default () => {
   const player = createPlayer();
-  const agents = times(2000, () => {
+  const agents = times(200, () => {
     const direction = rand(Math.PI * 2);
-    const distance = rand(2000, 50000);
+    const distance = rand(2000, 10000);
+    // const distance = 200;
     return floater({
       position: {
         x: Math.sin(direction) * distance,
@@ -30,6 +31,7 @@ export default () => {
     player,
     agents,
     wells,
+    smokes: [],
     camera: worldCamera(),
   };
 };

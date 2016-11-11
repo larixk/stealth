@@ -9,8 +9,7 @@ const renderer = new PIXI.WebGLRenderer(800, 600);
 renderer.autoResize = true;
 
 renderer.view.style.display = 'block';
-renderer.backgroundColor = 0xcccccc;
-renderer.backgroundColor = 0xffffff;
+renderer.backgroundColor = 0x5A464C;
 document.body.appendChild(renderer.view);
 document.body.style.margin = 0;
 
@@ -28,10 +27,17 @@ export const getSize = () => ({ width, height });
 
 export const addToStage = (child) => {
   stage.addChild(child);
+  return () => {
+    stage.removeChild(child);
+  };
 };
 
 export const resetStage = () => {
   stage = new PIXI.Container();
+};
+
+export const setBackground = (color) => {
+  renderer.backgroundColor = color;
 };
 
 export const draw = ({ camera }) => {
