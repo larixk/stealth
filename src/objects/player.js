@@ -19,7 +19,7 @@ function update(state) {
   if (isKeyDown('MovePlayerForward')) {
     this.speed += 0.03;
     this.speed = Math.min(1, this.speed);
-    times(2, () => {
+    times(1, () => {
       const smokeDistance = rand(5, 30) * (this.speed + 1);
       const dX = Math.cos(this.rotation) * -smokeDistance + rand(-15, 15) * this.speed;
       const dY = Math.sin(this.rotation) * -smokeDistance + rand(-15, 15) * this.speed;

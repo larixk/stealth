@@ -40,9 +40,15 @@ export const setBackground = (color) => {
   renderer.backgroundColor = color;
 };
 
-export const draw = ({ camera }) => {
-  stage.x = (width / 2) - (camera.x * camera.zoom);
-  stage.y = (height / 2) - (camera.y * camera.zoom);
+
+export const draw = ({ camera, player }) => {
+  // stage.x = (width / 2) - (camera.x * camera.zoom);
+  // stage.y = (height / 2) - (camera.y * camera.zoom);
+  stage.x = width * 0.5;
+  stage.y = height * 0.75;
+  stage.pivot.x = camera.x;
+  stage.pivot.y = camera.y;
   stage.scale.x = stage.scale.y = camera.zoom;
+  stage.rotation = camera.rotation;
   renderer.render(stage);
 };

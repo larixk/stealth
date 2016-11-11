@@ -43,12 +43,24 @@ function update(state) {
   this.y = lerp(this.y, cameraTargetY, 0.02);
   this.zoom = lerp(this.zoom, 1 - Math.pow(state.player.speed, 2), 0.01);
   this.zoom = clamp(this.zoom, 0.2, 0.5);
+  const twoPi = Math.PI * 2;
+  let targetRotation = -state.player.rotation - (Math.PI / 2);
+  const currentRotation = this.rotation % twoPi;
+  let dRotation = targetRotation - currentRotation;
+  while (dRotation < -Math.PI) {
+    dRotation += twoPi;
+  }
+  while (dRotation > Math.PI) {
+    dRotation -= twoPi;
+  }
+  this.rotation += dRotation * 0.05;
 }
 export default () => {
   const camera = {
     x: 0,
     y: 0,
     zoom: 1,
+    rotation: 0,
     dX: 0,
     dY: 0,
     dZoom: 0,

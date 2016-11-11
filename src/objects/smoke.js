@@ -2,16 +2,15 @@ import { rand, distance, lerp } from '../util';
 import { addToStage } from '../draw';
 
 function update(state) {
-  this.hp -= rand(0.01, 0.03);
   // this.alpha -= 0.003;
   // this.height += 0.02;
-  this.height /= 1.05;
+  this.height /= 1.01;
   this.width = this.height;
 
 this.position.x += this.dX;
 this.position.y += this.dY;
 
-  if (this.hp <= 0) {
+  if (this.height <= 0.02) {
     this.removeFromStage();
     state.smokes = state.smokes.filter((otherSmoke) => otherSmoke !== this);
   }
