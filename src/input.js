@@ -30,7 +30,7 @@ const keyMapping = {
   touch: 'MovePlayerForward',
 };
 
-window.addEventListener('pointerdown', (e) => {
+window.addEventListener('touchstart', (e) => {
   mouseDown = true;
   mouseDownLocation = {
     x: e.clientX,
@@ -39,13 +39,13 @@ window.addEventListener('pointerdown', (e) => {
   keyDown.MovePlayerForward = true;
 });
 
-window.addEventListener('pointerup', () => {
+window.addEventListener('touchend', () => {
   mouseDown = false;
   mouseDownLocation = null;
   keyDown.MovePlayerForward = false;
 });
 
-window.addEventListener('pointermove', (e) => {
+window.addEventListener('touchmove', (e) => {
   mouseX = e.clientX;
   mouseY = e.clientY;
   if (mouseDown) {

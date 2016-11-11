@@ -1493,6 +1493,7 @@
 	var mouseX = void 0;
 	var mouseY = void 0;
 	var mouseDown = void 0;
+	var mouseDownLocation = void 0;
 	var keyDown = {};
 
 	var keyMapping = {
@@ -1517,20 +1518,39 @@
 	  W: 'MovePlayerForward',
 	  A: 'TurnPlayerLeft',
 	  S: 'MovePlayerBack',
-	  D: 'TurnPlayerRight'
+	  D: 'TurnPlayerRight',
+	  touch: 'MovePlayerForward'
 	};
 
-	window.addEventListener('mousedown', function () {
+	window.addEventListener('touchstart', function (e) {
 	  mouseDown = true;
+	  mouseDownLocation = {
+	    x: e.clientX,
+	    y: e.clientY
+	  };
+	  keyDown.MovePlayerForward = true;
 	});
 
-	window.addEventListener('mouseup', function () {
+	window.addEventListener('touchend', function () {
 	  mouseDown = false;
+	  mouseDownLocation = null;
+	  keyDown.MovePlayerForward = false;
 	});
 
-	window.addEventListener('mousemove', function (e) {
+	window.addEventListener('touchmove', function (e) {
 	  mouseX = e.clientX;
 	  mouseY = e.clientY;
+	  if (mouseDown) {
+	    keyDown.TurnPlayerRight = false;
+	    keyDown.TurnPlayerLeft = false;
+	    if (Math.abs(mouseX - mouseDownLocation.x) > 50) {
+	      if (mouseX > mouseDownLocation.x) {
+	        keyDown.TurnPlayerRight = true;
+	      } else {
+	        keyDown.TurnPlayerLeft = true;
+	      }
+	    }
+	  }
 	});
 
 	window.addEventListener('keydown', function (e) {
@@ -1979,7 +1999,7 @@
 	  while (dRotation > Math.PI) {
 	    dRotation -= twoPi;
 	  }
-	  this.rotation += dRotation * 0.05;
+	  this.rotation += dRotation * 0.02;
 	}
 
 	exports.default = function () {
