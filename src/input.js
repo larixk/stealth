@@ -1,6 +1,7 @@
 let mouseX;
 let mouseY;
 let mouseDown;
+let mouseDownLocation;
 const keyDown = {};
 
 const keyMapping = {
@@ -26,19 +27,38 @@ const keyMapping = {
   A: 'TurnPlayerLeft',
   S: 'MovePlayerBack',
   D: 'TurnPlayerRight',
+  touch: 'MovePlayerForward',
 };
 
-window.addEventListener('mousedown', () => {
+window.addEventListener('pointerdown', (e) => {
   mouseDown = true;
+  mouseDownLocation = {
+    x: e.clientX,
+    y: e.clientY,
+  };
+  keyDown.MovePlayerForward = true;
 });
 
-window.addEventListener('mouseup', () => {
+window.addEventListener('pointerup', () => {
   mouseDown = false;
+  mouseDownLocation = null;
+  keyDown.MovePlayerForward = false;
 });
 
-window.addEventListener('mousemove', (e) => {
+window.addEventListener('pointermove', (e) => {
   mouseX = e.clientX;
   mouseY = e.clientY;
+  if (mouseDown) {
+    keyDown.TurnPlayerRight = false;
+    keyDown.TurnPlayerLeft = false;
+    if (Math.abs(mouseX - mouseDownLocation.x) > 50) {
+      if (mouseX > mouseDownLocation.x) {
+        keyDown.TurnPlayerRight = true;
+      } else {
+        keyDown.TurnPlayerLeft = true;
+      }
+    }
+  }
 });
 
 window.addEventListener('keydown', (e) => {

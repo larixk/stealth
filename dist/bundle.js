@@ -344,7 +344,7 @@
 	  if ((0, _input.isKeyDown)('MovePlayerForward')) {
 	    this.speed += 0.03;
 	    this.speed = Math.min(1, this.speed);
-	    (0, _util.times)(2, function () {
+	    (0, _util.times)(1, function () {
 	      var smokeDistance = (0, _util.rand)(5, 30) * (_this.speed + 1);
 	      var dX = Math.cos(_this.rotation) * -smokeDistance + (0, _util.rand)(-15, 15) * _this.speed;
 	      var dY = Math.sin(_this.rotation) * -smokeDistance + (0, _util.rand)(-15, 15) * _this.speed;
@@ -1623,11 +1623,17 @@
 	};
 
 	var draw = exports.draw = function draw(_ref) {
-	  var camera = _ref.camera;
+	  var camera = _ref.camera,
+	      player = _ref.player;
 
-	  stage.x = width / 2 - camera.x * camera.zoom;
-	  stage.y = height / 2 - camera.y * camera.zoom;
+	  // stage.x = (width / 2) - (camera.x * camera.zoom);
+	  // stage.y = (height / 2) - (camera.y * camera.zoom);
+	  stage.x = width * 0.5;
+	  stage.y = height * 0.75;
+	  stage.pivot.x = camera.x;
+	  stage.pivot.y = camera.y;
 	  stage.scale.x = stage.scale.y = camera.zoom;
+	  stage.rotation = camera.rotation;
 	  renderer.render(stage);
 	};
 
@@ -1675,16 +1681,15 @@
 	function update(state) {
 	  var _this = this;
 
-	  this.hp -= (0, _util.rand)(0.01, 0.03);
 	  // this.alpha -= 0.003;
 	  // this.height += 0.02;
-	  this.height /= 1.05;
+	  this.height /= 1.01;
 	  this.width = this.height;
 
 	  this.position.x += this.dX;
 	  this.position.y += this.dY;
 
-	  if (this.hp <= 0) {
+	  if (this.height <= 0.02) {
 	    this.removeFromStage();
 	    state.smokes = state.smokes.filter(function (otherSmoke) {
 	      return otherSmoke !== _this;
@@ -1964,6 +1969,17 @@
 	  this.y = (0, _util.lerp)(this.y, cameraTargetY, 0.02);
 	  this.zoom = (0, _util.lerp)(this.zoom, 1 - Math.pow(state.player.speed, 2), 0.01);
 	  this.zoom = (0, _util.clamp)(this.zoom, 0.2, 0.5);
+	  var twoPi = Math.PI * 2;
+	  var targetRotation = -state.player.rotation - Math.PI / 2;
+	  var currentRotation = this.rotation % twoPi;
+	  var dRotation = targetRotation - currentRotation;
+	  while (dRotation < -Math.PI) {
+	    dRotation += twoPi;
+	  }
+	  while (dRotation > Math.PI) {
+	    dRotation -= twoPi;
+	  }
+	  this.rotation += dRotation * 0.05;
 	}
 
 	exports.default = function () {
@@ -1971,6 +1987,7 @@
 	    x: 0,
 	    y: 0,
 	    zoom: 1,
+	    rotation: 0,
 	    dX: 0,
 	    dY: 0,
 	    dZoom: 0
