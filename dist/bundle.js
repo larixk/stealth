@@ -58,24 +58,21 @@
 
 	var _initialState2 = _interopRequireDefault(_initialState);
 
-	var _update = __webpack_require__(15);
+	var _update = __webpack_require__(16);
 
 	var _update2 = _interopRequireDefault(_update);
 
 	var _draw = __webpack_require__(10);
 
-	var _sound = __webpack_require__(16);
-
-	var _sound2 = _interopRequireDefault(_sound);
-
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	// import sound from './src/sound';
 
 	(0, _load2.default)().then(function () {
 	  var _game = (0, _gameloop2.default)({
 	    msPerUpdate: 1000 / 60,
 	    update: _update2.default,
-	    draw: _draw.draw,
-	    sound: _sound2.default
+	    draw: _draw.draw
 	  }),
 	      setState = _game.setState;
 
@@ -103,7 +100,7 @@
 	  return new Promise(function (resolve) {
 	    var PIXI = window.PIXI;
 
-	    PIXI.loader.add('img/player.png').load(resolve);
+	    PIXI.loader.add('img/paper-noise.jpg').load(resolve);
 	  });
 	};
 
@@ -218,6 +215,10 @@
 	  return Math.atan2(p2.y - p1.y, p2.x - p1.x);
 	};
 
+	var rgbToColor = exports.rgbToColor = function rgbToColor(r, g, b) {
+	  return (r << 16) + (g << 8) + b;
+	};
+
 	var throttle = exports.throttle = function throttle(f, t) {
 	  var lastCall = 0;
 	  return function () {
@@ -252,15 +253,15 @@
 
 	var _player2 = _interopRequireDefault(_player);
 
-	var _floater = __webpack_require__(12);
+	var _floater = __webpack_require__(13);
 
 	var _floater2 = _interopRequireDefault(_floater);
 
-	var _attractor = __webpack_require__(13);
+	var _attractor = __webpack_require__(14);
 
 	var _attractor2 = _interopRequireDefault(_attractor);
 
-	var _camera = __webpack_require__(14);
+	var _camera = __webpack_require__(15);
 
 	var _camera2 = _interopRequireDefault(_camera);
 
@@ -270,9 +271,10 @@
 
 	exports.default = function () {
 	  var player = (0, _player2.default)();
-	  var agents = (0, _util.times)(2000, function () {
+	  var agents = (0, _util.times)(200, function () {
 	    var direction = (0, _util.rand)(Math.PI * 2);
-	    var distance = (0, _util.rand)(2000, 50000);
+	    var distance = (0, _util.rand)(2000, 10000);
+	    // const distance = 200;
 	    return (0, _floater2.default)({
 	      position: {
 	        x: Math.sin(direction) * distance,
@@ -294,6 +296,7 @@
 	    player: player,
 	    agents: agents,
 	    wells: wells,
+	    smokes: [],
 	    camera: (0, _camera2.default)()
 	  };
 	};
@@ -318,9 +321,15 @@
 
 	var _draw = __webpack_require__(10);
 
+	var _smoke = __webpack_require__(12);
+
+	var _smoke2 = _interopRequireDefault(_smoke);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function update(state) {
+	  var _this = this;
+
 	  this.hitbox.rotate(-this.rotation);
 
 	  if ((0, _input.isKeyDown)('TurnPlayerRight')) {
@@ -335,6 +344,17 @@
 	  if ((0, _input.isKeyDown)('MovePlayerForward')) {
 	    this.speed += 0.03;
 	    this.speed = Math.min(1, this.speed);
+	    (0, _util.times)(2, function () {
+	      var smokeDistance = (0, _util.rand)(5, 30) * (_this.speed + 1);
+	      var dX = Math.cos(_this.rotation) * -smokeDistance + (0, _util.rand)(-15, 15) * _this.speed;
+	      var dY = Math.sin(_this.rotation) * -smokeDistance + (0, _util.rand)(-15, 15) * _this.speed;
+	      state.smokes.push((0, _smoke2.default)({
+	        position: {
+	          x: _this.position.x + dX,
+	          y: _this.position.y + dY
+	        }
+	      }));
+	    });
 	  }
 	  if ((0, _input.isKeyDown)('MovePlayerBack')) {
 	    this.speed -= 0.1;
@@ -345,7 +365,7 @@
 	    state.playerWell = { position: this.position, strength: 0.5 };
 	    this.pullEffect.width = this.pullEffect.height /= 1.1;
 	    if (this.pullEffect.width < 100) {
-	      this.pullEffect.width = this.pullEffect.height = 200000;
+	      this.pullEffect.width = this.pullEffect.height = 10000;
 	    }
 	    this.pullEffect.alpha = 1;
 	  }
@@ -353,10 +373,13 @@
 	    state.playerWell = { position: this.position, strength: -1 };
 
 	    this.pullEffect.width = this.pullEffect.height *= 1.1;
-	    if (this.pullEffect.width > 200000) {
+	    if (this.pullEffect.width > 10000) {
 	      this.pullEffect.width = this.pullEffect.height = 100;
 	    }
 	    this.pullEffect.alpha = 1;
+	  }
+	  if (this.pullEffect.alpha === 0) {
+	    this.pullEffect.height = 100;
 	  }
 
 	  this.totalDistance = 0;
@@ -384,6 +407,8 @@
 	  this.position.x += dX;
 	  this.position.y += dY;
 
+	  this.redshift.alpha = this.speed;
+
 	  this.hitbox.setOffset(new _sat2.default.Vector(this.position.x, this.position.y));
 	  this.hitbox.rotate(this.rotation);
 	}
@@ -393,7 +418,7 @@
 	  var graphics = new PIXI.Graphics();
 
 	  var size = 2;
-	  graphics.beginFill(0x111111);
+	  graphics.beginFill(0xFFEFBD);
 
 	  graphics.moveTo(-10 * size, -6 * size);
 	  graphics.lineTo(10 * size, 0 * size);
@@ -401,15 +426,28 @@
 	  graphics.lineTo(-10 * size, -6 * size);
 	  graphics.endFill();
 
+	  var redshift = new PIXI.Sprite();
+	  var redshiftGraphics = new PIXI.Graphics();
+	  redshiftGraphics.beginFill(0xffffff);
+
+	  redshiftGraphics.moveTo(-10 * size, -6 * size);
+	  redshiftGraphics.lineTo(10 * size, 0 * size);
+	  redshiftGraphics.lineTo(-10 * size, 6 * size);
+	  redshiftGraphics.lineTo(-10 * size, -6 * size);
+	  redshiftGraphics.endFill();
+	  redshift.addChild(redshiftGraphics);
+
 	  var pullEffect = new PIXI.Graphics();
 
 	  pullEffect.beginFill(0, 0);
-	  pullEffect.lineStyle(200, 0xbbbbbb, 1);
+	  pullEffect.lineStyle(200, 0xFFFACC, 1);
 	  pullEffect.drawCircle(0, 0, 500);
 	  pullEffect.endFill();
 
 	  var player = new PIXI.Sprite();
 	  player.addChild(graphics);
+	  player.addChild(redshift);
+	  player.redshift = redshift;
 	  player.addChild(pullEffect);
 	  player.pullEffect = pullEffect;
 	  player.speed = 0;
@@ -1538,7 +1576,7 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.draw = exports.resetStage = exports.addToStage = exports.getSize = undefined;
+	exports.draw = exports.setBackground = exports.resetStage = exports.addToStage = exports.getSize = undefined;
 
 	__webpack_require__(11);
 
@@ -1551,8 +1589,7 @@
 	renderer.autoResize = true;
 
 	renderer.view.style.display = 'block';
-	renderer.backgroundColor = 0xcccccc;
-	renderer.backgroundColor = 0xffffff;
+	renderer.backgroundColor = 0x5A464C;
 	document.body.appendChild(renderer.view);
 	document.body.style.margin = 0;
 
@@ -1572,10 +1609,17 @@
 
 	var addToStage = exports.addToStage = function addToStage(child) {
 	  stage.addChild(child);
+	  return function () {
+	    stage.removeChild(child);
+	  };
 	};
 
 	var resetStage = exports.resetStage = function resetStage() {
 	  stage = new PIXI.Container();
+	};
+
+	var setBackground = exports.setBackground = function setBackground(color) {
+	  renderer.backgroundColor = color;
 	};
 
 	var draw = exports.draw = function draw(_ref) {
@@ -1624,6 +1668,75 @@
 	  value: true
 	});
 
+	var _util = __webpack_require__(3);
+
+	var _draw = __webpack_require__(10);
+
+	function update(state) {
+	  var _this = this;
+
+	  this.hp -= (0, _util.rand)(0.01, 0.03);
+	  // this.alpha -= 0.003;
+	  // this.height += 0.02;
+	  this.height /= 1.05;
+	  this.width = this.height;
+
+	  this.position.x += this.dX;
+	  this.position.y += this.dY;
+
+	  if (this.hp <= 0) {
+	    this.removeFromStage();
+	    state.smokes = state.smokes.filter(function (otherSmoke) {
+	      return otherSmoke !== _this;
+	    });
+	  }
+	}
+
+	exports.default = function (_ref) {
+	  var position = _ref.position,
+	      dX = _ref.dX,
+	      dY = _ref.dY;
+
+	  var PIXI = window.PIXI;
+	  var smoke = new PIXI.Sprite();
+	  smoke.position = position;
+
+	  console.log('creating smoke');
+
+	  var graphics = new PIXI.Graphics();
+	  graphics.beginFill(0xF1E4E8);
+	  var size = (0, _util.rand)(10, 30);
+	  graphics.moveTo(-5 * size, -6 * size);
+	  graphics.lineTo(5 * size, 0 * size);
+	  graphics.lineTo(-5 * size, 6 * size);
+	  graphics.lineTo(-5 * size, -6 * size);
+	  graphics.endFill();
+	  smoke.addChild(graphics);
+
+	  smoke.width = smoke.height = (0, _util.rand)(0.03, 0.1);
+	  smoke.alpha = 1;
+	  smoke.rotation = (0, _util.rand)(Math.PI * 2);
+	  smoke.dX = (0, _util.rand)(-2, 2);
+	  smoke.dY = (0, _util.rand)(-2, 2);;
+	  smoke.hp = 1;
+
+	  smoke.removeFromStage = (0, _draw.addToStage)(smoke);
+
+	  smoke.update = update;
+
+	  return smoke;
+	};
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
 	var _sat = __webpack_require__(6);
 
 	var _sat2 = _interopRequireDefault(_sat);
@@ -1653,17 +1766,13 @@
 	    var speed = Math.pow(this.distanceToPlayer, 2) / state.playerWell.strength * (0, _util.lerp)(1, 0.5, this.size) * (1 / 1000);
 	    this.dX += (state.playerWell.position.x - this.position.x) / speed;
 	    this.dY += (state.playerWell.position.y - this.position.y) / speed;
-
-	    // const d = distance(this.position, state.playerWell.position);
-	    // this.dX += ((state.playerWell.position.x - this.position.x) / Math.pow(d, 2)) * ((1 - this.size) * 300);
-	    // this.dY += ((state.playerWell.position.y - this.position.y) / Math.pow(d, 2)) * ((1 - this.size) * 300);
 	  }
 
-	  state.player.totalDistance += (0, _util.distance)(this.position, state.player.position);
-	  // this.dX *= lerp(0.99, 1, this.size);
-	  // this.dY *= lerp(0.99, 1, this.size);
-	  this.dX += (0, _util.rand)(-0.03, 0.03);
-	  this.dY += (0, _util.rand)(-0.03, 0.03);
+	  // state.player.totalDistance += distance(this.position, state.player.position);
+	  // this.dX += rand(-0.03, 0.03);
+	  // this.dY += rand(-0.03, 0.03);
+	  this.dX *= 0.999;
+	  this.dY *= 0.999;
 
 	  this.rotation += this.dRotation;
 
@@ -1674,52 +1783,64 @@
 	  this.hitbox.rotate(this.rotation);
 
 	  if (this.intersectsWith(state.player)) {
-	    // const dX = Math.cos(state.player.rotation) * 10 * this.size;
-	    // const dY = Math.sin(state.player.rotation) * 10 * this.size;
-	    // state.player.position.x -= dX;
-	    // state.player.position.y -= dY;
-	    state.player.speed = 0;
-	    // location.reload();
+	    state.player.speed = -0.2;
+	    state.camera.x += (0, _util.rand)(-10 / state.camera.zoom, 10 / state.camera.zoom);
+	    state.camera.y += (0, _util.rand)(-10 / state.camera.zoom, 10 / state.camera.zoom);
 	  }
 	}
 	function intersectsWith(sprite) {
 	  return _sat2.default.testPolygonPolygon(this.hitbox, sprite.hitbox);
 	}
 
-	var rgbToColor = function rgbToColor(r, g, b) {
-	  return r * 0xffff + g * 0xff + b;
-	};
-
 	exports.default = function (startingValues) {
 	  var PIXI = window.PIXI;
-	  var graphics = new PIXI.Graphics();
 
 	  var size = (0, _util.rand)(0.2, 1);
-
-	  graphics.beginFill(0x111111);
 	  // graphics.beginFill(rgbToColor(0xff * size, 0xff * size, 0xff * size));
 
 	  var vertices = [];
 	  var currentAngle = 0;
+	  var maxVertexSize = 0;
 	  while (currentAngle < Math.PI * 2) {
 	    var vertexSize = (0, _util.rand)(40, 60) * Math.pow(size, 2) * 5;
+	    if (vertexSize > maxVertexSize) {
+	      maxVertexSize = vertexSize;
+	    }
 	    vertices.push({
 	      x: Math.cos(currentAngle) * vertexSize,
 	      y: Math.sin(currentAngle) * vertexSize
 	    });
-	    currentAngle += (0, _util.rand)(0.5, 1);
+	    currentAngle += (0, _util.rand)(0.2, 1);
 	  }
 	  var satVectors = [];
 
+	  var mask = new PIXI.Graphics();
+	  mask.beginFill(0xB5D6B2);
+
+	  var graphics = new PIXI.Graphics();
+	  graphics.beginFill(0xB5D6B2);
+
+	  mask.moveTo(vertices[0].x, vertices[0].y);
 	  graphics.moveTo(vertices[0].x, vertices[0].y);
 	  for (var i = 1; i < vertices.length; i += 1) {
+	    mask.lineTo(vertices[i].x, vertices[i].y);
 	    graphics.lineTo(vertices[i].x, vertices[i].y);
 	    satVectors.push(new _sat2.default.Vector(vertices[i].x, vertices[i].y));
 	  }
+	  mask.lineTo(vertices[0].x, vertices[0].y);
 	  graphics.lineTo(vertices[0].x, vertices[0].y);
 
+	  mask.endFill();
 	  graphics.endFill();
-	  graphics.cacheAsBitmap = true;
+
+	  var texture = new PIXI.Sprite.fromImage('img/paper-noise.jpg');
+	  texture.width = 120 * 5;
+	  texture.height = 120 * 5;
+	  texture.alpha = 0.2;
+	  texture.anchor.x = texture.anchor.y = 0.5;
+
+	  texture.mask = mask;
+	  texture.bendMode = PIXI.BLEND_MODES.OVERLAY;
 
 	  var hitbox = new _sat2.default.Polygon(new _sat2.default.Vector(), satVectors);
 
@@ -1727,11 +1848,14 @@
 	  floater.size = size;
 	  floater.position = startingValues.position;
 	  floater.opacity = 0.5;
+	  floater.textureSprite = texture;
 	  floater.addChild(graphics);
+	  floater.addChild(mask);
+	  floater.addChild(texture);
 	  floater.anchor.y = floater.anchor.x = 0.5;
 	  floater.speed = 0;
-	  floater.dX = 0;
-	  floater.dY = 0;
+	  floater.dX = (0, _util.rand)(-10, 10);
+	  floater.dY = (0, _util.rand)(-10, 10);
 	  floater.dRotation = (0, _util.rand)(-0.01, 0.01);
 	  floater.update = update.bind(floater);
 	  floater.intersectsWith = intersectsWith.bind(floater);
@@ -1746,7 +1870,7 @@
 	};
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1785,7 +1909,7 @@
 	};
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1857,7 +1981,7 @@
 	};
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -1869,157 +1993,15 @@
 	exports.default = function (state) {
 	  state.playerWell = null;
 	  state.player.update(state);
+	  state.smokes.forEach(function (smoke) {
+	    return smoke.update(state);
+	  });
 	  state.agents.forEach(function (agent) {
 	    return agent.update(state);
 	  });
 	  state.camera.update(state);
 	  // console.log(state.player.totalDistance);
 	  return state;
-	};
-
-/***/ },
-/* 16 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _util = __webpack_require__(3);
-
-	var ctx = new (AudioContext || webkitAudioContext)();
-
-	var notes = {
-	  c: 16.35,
-	  cSharp: 17.32,
-	  d: 18.35,
-	  eFlat: 19.45,
-	  e: 20.60,
-	  f: 21.83,
-	  fSharp: 23.12,
-	  g: 24.50,
-	  gSharp: 25.96,
-	  a: 27.50,
-	  bFlat: 29.14,
-	  b: 30.87
-	};
-
-	var chords = {
-	  gMajor: {
-	    chord: [notes.g, notes.b, notes.d],
-	    next: ['cMinor']
-	  },
-	  cMinor: {
-	    chord: [notes.c, notes.eFlat, notes.g],
-	    next: ['gMinor']
-	  },
-	  gMinor: {
-	    chord: [notes.d, notes.bFlat, notes.g],
-	    next: ['cMajor']
-	  },
-	  cMajor: {
-	    chord: [notes.c, notes.e, notes.g],
-	    next: ['fMajor', 'bFlatMajor']
-	  },
-	  fMajor: {
-	    chord: [notes.f, notes.c, notes.a],
-	    next: ['bFlatMajor']
-	  },
-	  bFlatMajor: {
-	    chord: [notes.bFlat, notes.d, notes.f],
-	    next: ['aMinor']
-	  },
-	  aMinor: {
-	    chord: [notes.a, notes.c, notes.e],
-	    next: ['gMinor']
-	  },
-	  dMajor: {
-	    chord: [notes.c, notes.a, notes.d, notes.fSharp],
-	    next: ['gMajor']
-	  }
-	};
-	var currentScale = chords.gMajor;
-	setInterval(function () {
-	  var next = (0, _util.sample)(currentScale.next);
-	  console.log(next);
-	  currentScale = chords[next];
-	}, 4000);
-
-	var synths = (0, _util.times)(8, function () {
-	  var oscillator = ctx.createOscillator();
-	  var gainNode = ctx.createGain();
-	  var panNode = ctx.createStereoPanner();
-	  var biquadFilter = ctx.createBiquadFilter();
-
-	  oscillator.type = 'sine';
-	  oscillator.detune.value = 100;
-
-	  // biquadFilter.type = 'lowshelf';
-	  // biquadFilter.frequency.value = 80;
-	  // biquadFilter.gain.value = 10;
-
-	  oscillator.connect(gainNode);
-	  // biquadFilter.connect(gainNode);
-	  gainNode.connect(panNode);
-	  panNode.connect(ctx.destination);
-
-	  gainNode.gain.value = 0;
-	  oscillator.frequency.value = 0;
-
-	  oscillator.start(0);
-	  return {
-	    setFrequency: function setFrequency(f) {
-	      oscillator.frequency.value = f; //lerp(oscillator.frequency.value, f, 0.5);
-	    },
-	    setVolume: function setVolume(v) {
-	      gainNode.gain.value = v;
-	    },
-	    setPan: function setPan(p) {
-	      panNode.pan.value = p;
-	    }
-	  };
-	});
-
-	var roundToC = function roundToC(frequency) {
-	  var chord = currentScale.chord;
-	  var calculatedFreqency = void 0;
-	  for (var i = 2; i < 8; i++) {
-	    for (var j = 0; j < chord.length; j++) {
-	      var baseNote = chord[j];
-	      calculatedFreqency = Math.pow(2, i) * baseNote;
-	      if (calculatedFreqency > frequency) {
-	        return calculatedFreqency;
-	      }
-	    }
-	  }
-	  return calculatedFreqency;
-	};
-
-	exports.default = function (state) {
-	  state.agents.sort(function (agent1, agent2) {
-	    return agent1.distanceToPlayer - agent2.distanceToPlayer;
-	  }).slice(0, synths.length).forEach(function (agent, i) {
-	    var previousDistance = agent.previousDistance;
-	    var doppler = previousDistance ? agent.distanceToPlayer - previousDistance : 0;
-	    agent.previousDistance = agent.distanceToPlayer;
-	    var frequency = (0, _util.lerp)(220, 1400, Math.pow(1 - agent.size, 2)) - doppler * 10;
-	    var frequencyRoundedToC = roundToC(frequency);
-
-	    synths[i].setFrequency(frequencyRoundedToC);
-	    // synths[i].setFrequency(frequency);
-	    var distanceFactor = Math.min(1, 1 / Math.pow(agent.distanceToPlayer, 2) * 1000);
-	    synths[i].setVolume((0, _util.lerp)(0, 0.4, agent.size * distanceFactor));
-
-	    var angleFromPlayerToAgent = ((0, _util.direction)(agent, state.player) / (Math.PI * 2) + 2.5) % 1;
-	    var playerRotation = state.player.rotation / (Math.PI * 2);
-	    var directionFromPlayerToAgent = (angleFromPlayerToAgent - playerRotation + 1) % 1;
-	    var pan = directionFromPlayerToAgent < 0.5 ? (Math.abs(directionFromPlayerToAgent - 0.25) - 0.25) * -4 : (Math.abs(directionFromPlayerToAgent - 0.75) - 0.25) * 4;
-	    synths[i].setPan(pan);
-	  });
-	  //   oscillator.frequency.value = lerp(110, 130, Math.pow(state.player.speed, 2));
-	  //   gainNode.gain.value = state.camera.zoom;
 	};
 
 /***/ }
