@@ -257,6 +257,10 @@
 
 	var _floater2 = _interopRequireDefault(_floater);
 
+	var _smoke = __webpack_require__(12);
+
+	var _smoke2 = _interopRequireDefault(_smoke);
+
 	var _attractor = __webpack_require__(14);
 
 	var _attractor2 = _interopRequireDefault(_attractor);
@@ -269,6 +273,56 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	var floaterTypes = [{
+	  // friendly
+	  color: 0xB5D6B2,
+	  collideWithPlayer: function collideWithPlayer(theFloater, state) {
+	    theFloater.hp = 0;
+	    theFloater.alpha = 0;
+	    state.player.currentPoints += theFloater.size * 1000;
+
+	    (0, _util.times)(30 * theFloater.size, function () {
+	      var smokeDistance = (0, _util.rand)(0, 200) * theFloater.size;
+	      var smokeDirection = (0, _util.rand)(0, Math.PI * 2);
+	      var dX = Math.cos(smokeDirection) * smokeDistance;
+	      var dY = Math.sin(smokeDirection) * smokeDistance;
+	      state.smokes.push((0, _smoke2.default)({
+	        position: {
+	          x: theFloater.position.x + dX,
+	          y: theFloater.position.y + dY
+	        },
+	        dX: (0, _util.rand)(-10, 10),
+	        dY: (0, _util.rand)(-10, 10),
+	        color: 0xB5D6B2,
+	        size: 20
+	      }));
+	    });
+	  }
+	}, {
+	  // dangerous
+	  color: 0x000000,
+	  collideWithPlayer: function collideWithPlayer(theFloater, state) {
+	    state.player.speed = -0.2;
+	    state.camera.x += (0, _util.rand)(-10 / state.camera.zoom, 10 / state.camera.zoom);
+	    state.camera.y += (0, _util.rand)(-10 / state.camera.zoom, 10 / state.camera.zoom);
+
+	    if (state.player.currentPoints > 0) {
+	      (0, _util.times)(Math.min(1, state.player.currentPoints / 100) * 50, function () {
+	        state.smokes.push((0, _smoke2.default)({
+	          position: {
+	            x: state.player.position.x,
+	            y: state.player.position.y
+	          },
+	          dX: (0, _util.rand)(-20, 20),
+	          dY: (0, _util.rand)(-20, 20),
+	          color: 0
+	        }));
+	      });
+	      state.player.currentPoints = 0;
+	    }
+	  }
+	}];
+
 	exports.default = function () {
 	  var player = (0, _player2.default)();
 	  var agents = (0, _util.times)(200, function () {
@@ -276,6 +330,7 @@
 	    var distance = (0, _util.rand)(2000, 10000);
 	    // const distance = 200;
 	    return (0, _floater2.default)({
+	      type: (0, _util.sample)(floaterTypes),
 	      position: {
 	        x: Math.sin(direction) * distance,
 	        y: Math.cos(direction) * distance
@@ -333,35 +388,51 @@
 	  this.hitbox.rotate(-this.rotation);
 
 	  if ((0, _input.isKeyDown)('TurnPlayerRight')) {
-	    this.rotation += (0, _util.lerp)(0.01, 0.06, this.speed);
+	    this.rotation += (0, _util.lerp)(0.05, 0.06, this.speed);
 	    this.rotation %= Math.PI * 2;
 	  }
 	  if ((0, _input.isKeyDown)('TurnPlayerLeft')) {
-	    this.rotation -= (0, _util.lerp)(0.01, 0.06, this.speed);
+	    this.rotation -= (0, _util.lerp)(0.05, 0.06, this.speed);
 	    this.rotation += Math.PI * 2;
 	    this.rotation %= Math.PI * 2;
 	  }
 	  if ((0, _input.isKeyDown)('MovePlayerForward')) {
-	    this.speed += 0.03;
-	    this.speed = Math.min(1, this.speed);
-	    (0, _util.times)(1, function () {
-	      var smokeDistance = (0, _util.rand)(5, 30) * (_this.speed + 1);
-	      var dX = Math.cos(_this.rotation) * -smokeDistance + (0, _util.rand)(-15, 15) * _this.speed;
-	      var dY = Math.sin(_this.rotation) * -smokeDistance + (0, _util.rand)(-15, 15) * _this.speed;
-	      state.smokes.push((0, _smoke2.default)({
-	        position: {
-	          x: _this.position.x + dX,
-	          y: _this.position.y + dY
+	    (function () {
+	      _this.speed += 0.03;
+	      _this.speed = Math.min(1, _this.speed);
+
+	      var smokeColor = 0xF1E4E8;
+	      if (_this.speed >= 0.5) {
+	        if (_this.currentPoints <= 0) {
+	          _this.currentPoints = 0;
+	          _this.speed = 0.5;
+	        } else {
+	          smokeColor = 0xB5D6B2;
+	          _this.currentPoints -= 1;
 	        }
-	      }));
-	    });
+	      }
+	      (0, _util.times)(1, function () {
+	        var smokeDistance = (0, _util.rand)(5, 30) * (_this.speed + 1);
+	        var dX = Math.cos(_this.rotation) * -smokeDistance + (0, _util.rand)(-15, 15) * _this.speed;
+	        var dY = Math.sin(_this.rotation) * -smokeDistance + (0, _util.rand)(-15, 15) * _this.speed;
+	        state.smokes.push((0, _smoke2.default)({
+	          position: {
+	            x: _this.position.x + dX,
+	            y: _this.position.y + dY
+	          },
+	          color: smokeColor
+	        }));
+	      });
+	    })();
 	  }
 	  if ((0, _input.isKeyDown)('MovePlayerBack')) {
-	    this.speed -= 0.1;
+	    this.speed -= 0.05;
 	    this.speed = Math.max(-0.5, this.speed);
 	  }
 	  this.pullEffect.alpha = 0;
+	  this.isPulling = false;
 	  if ((0, _input.isKeyDown)('Pull')) {
+	    this.isPulling = true;
 	    state.playerWell = { position: this.position, strength: 0.5 };
 	    this.pullEffect.width = this.pullEffect.height /= 1.1;
 	    if (this.pullEffect.width < 100) {
@@ -370,6 +441,7 @@
 	    this.pullEffect.alpha = 1;
 	  }
 	  if ((0, _input.isKeyDown)('Push')) {
+	    this.isPulling = true;
 	    state.playerWell = { position: this.position, strength: -1 };
 
 	    this.pullEffect.width = this.pullEffect.height *= 1.1;
@@ -407,7 +479,7 @@
 	  this.position.x += dX;
 	  this.position.y += dY;
 
-	  this.redshift.alpha = this.speed;
+	  this.redshift.alpha = 0; //this.speed;
 
 	  this.hitbox.setOffset(new _sat2.default.Vector(this.position.x, this.position.y));
 	  this.hitbox.rotate(this.rotation);
@@ -454,6 +526,7 @@
 	  player.size = 0.1;
 	  player.dX = 0;
 	  player.dY = 0;
+	  player.currentPoints = 0;
 	  player.update = update.bind(player);
 
 	  player.hitbox = new _sat2.default.Polygon(new _sat2.default.Vector(), [new _sat2.default.Vector(5, 0), new _sat2.default.Vector(-5, 3), new _sat2.default.Vector(-5, -3)]);
@@ -1598,9 +1671,13 @@
 	});
 	exports.draw = exports.setBackground = exports.resetStage = exports.addToStage = exports.getSize = undefined;
 
+	var _util = __webpack_require__(3);
+
 	__webpack_require__(11);
 
 	var PIXI = window.PIXI;
+
+	var gui = void 0;
 
 	var width = 0;
 	var height = 0;
@@ -1636,6 +1713,18 @@
 
 	var resetStage = exports.resetStage = function resetStage() {
 	  stage = new PIXI.Container();
+
+	  var style = {
+	    // fontFamily: 'Arial',
+	    fontSize: '400px',
+	    fontWeight: 'bold',
+	    fill: '#F1E4E8'
+	  };
+
+	  gui = new PIXI.Text('', style);
+	  gui.points = 0;
+
+	  addToStage(gui);
 	};
 
 	var setBackground = exports.setBackground = function setBackground(color) {
@@ -1652,6 +1741,13 @@
 	  stage.y = height * 0.75;
 	  stage.pivot.x = camera.x;
 	  stage.pivot.y = camera.y;
+	  gui.points = (0, _util.lerp)(gui.points, player.currentPoints, 0.1);
+	  gui.setText('\n' + Math.round(gui.points));
+	  gui.anchor.set(0.5, -0.4);
+	  gui.x = player.x;
+	  gui.y = player.y;
+	  gui.scale.x = gui.scale.y = (0, _util.lerp)(gui.scale.x, (0, _util.clamp)(Math.abs(player.currentPoints - gui.points) / 100, 0.1, 1), 0.1);
+	  gui.rotation = (0, _util.lerp)(gui.rotation, -camera.rotation, 0.1);
 	  stage.scale.x = stage.scale.y = camera.zoom;
 	  stage.rotation = camera.rotation;
 	  renderer.render(stage);
@@ -1720,17 +1816,17 @@
 	exports.default = function (_ref) {
 	  var position = _ref.position,
 	      dX = _ref.dX,
-	      dY = _ref.dY;
+	      dY = _ref.dY,
+	      color = _ref.color,
+	      _ref$size = _ref.size,
+	      size = _ref$size === undefined ? (0, _util.rand)(10, 30) : _ref$size;
 
 	  var PIXI = window.PIXI;
 	  var smoke = new PIXI.Sprite();
 	  smoke.position = position;
 
-	  console.log('creating smoke');
-
 	  var graphics = new PIXI.Graphics();
-	  graphics.beginFill(0xF1E4E8);
-	  var size = (0, _util.rand)(10, 30);
+	  graphics.beginFill(color);
 	  graphics.moveTo(-5 * size, -6 * size);
 	  graphics.lineTo(5 * size, 0 * size);
 	  graphics.lineTo(-5 * size, 6 * size);
@@ -1741,8 +1837,8 @@
 	  smoke.width = smoke.height = (0, _util.rand)(0.03, 0.1);
 	  smoke.alpha = 1;
 	  smoke.rotation = (0, _util.rand)(Math.PI * 2);
-	  smoke.dX = (0, _util.rand)(-2, 2);
-	  smoke.dY = (0, _util.rand)(-2, 2);;
+	  smoke.dX = dX || (0, _util.rand)(-2, 2);
+	  smoke.dY = dY || (0, _util.rand)(-2, 2);
 	  smoke.hp = 1;
 
 	  smoke.removeFromStage = (0, _draw.addToStage)(smoke);
@@ -1772,6 +1868,8 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	var PIXI = window.PIXI;
+
 	function update(state) {
 	  var _this = this;
 
@@ -1794,10 +1892,10 @@
 	  }
 
 	  // state.player.totalDistance += distance(this.position, state.player.position);
-	  // this.dX += rand(-0.03, 0.03);
-	  // this.dY += rand(-0.03, 0.03);
-	  this.dX *= 0.999;
-	  this.dY *= 0.999;
+	  this.dX += (0, _util.rand)(-0.03, 0.03);
+	  this.dY += (0, _util.rand)(-0.03, 0.03);
+	  // this.dX *= 0.999;
+	  // this.dY *= 0.999;
 
 	  this.rotation += this.dRotation;
 
@@ -1808,20 +1906,25 @@
 	  this.hitbox.rotate(this.rotation);
 
 	  if (this.intersectsWith(state.player)) {
-	    state.player.speed = -0.2;
-	    state.camera.x += (0, _util.rand)(-10 / state.camera.zoom, 10 / state.camera.zoom);
-	    state.camera.y += (0, _util.rand)(-10 / state.camera.zoom, 10 / state.camera.zoom);
+	    this.type.collideWithPlayer(this, state);
 	  }
+
+	  if (this.hp <= 0) {
+	    this.removeFromStage();
+	    return false;
+	  }
+	  return true;
 	}
 	function intersectsWith(sprite) {
 	  return _sat2.default.testPolygonPolygon(this.hitbox, sprite.hitbox);
 	}
 
-	exports.default = function (startingValues) {
-	  var PIXI = window.PIXI;
+	exports.default = function (_ref) {
+	  var position = _ref.position,
+	      type = _ref.type;
+
 
 	  var size = (0, _util.rand)(0.2, 1);
-	  // graphics.beginFill(rgbToColor(0xff * size, 0xff * size, 0xff * size));
 
 	  var vertices = [];
 	  var currentAngle = 0;
@@ -1840,10 +1943,11 @@
 	  var satVectors = [];
 
 	  var mask = new PIXI.Graphics();
-	  mask.beginFill(0xB5D6B2);
+	  mask.beginFill(0);
 
 	  var graphics = new PIXI.Graphics();
-	  graphics.beginFill(0xB5D6B2);
+
+	  graphics.beginFill(type.color);
 
 	  mask.moveTo(vertices[0].x, vertices[0].y);
 	  graphics.moveTo(vertices[0].x, vertices[0].y);
@@ -1870,8 +1974,10 @@
 	  var hitbox = new _sat2.default.Polygon(new _sat2.default.Vector(), satVectors);
 
 	  var floater = new PIXI.Sprite();
+	  floater.hp = 1;
+	  floater.type = type;
 	  floater.size = size;
-	  floater.position = startingValues.position;
+	  floater.position = position;
 	  floater.opacity = 0.5;
 	  floater.textureSprite = texture;
 	  floater.addChild(graphics);
@@ -1889,7 +1995,7 @@
 
 	  floater.cacheAsBitmap = true;
 
-	  (0, _draw.addToStage)(floater);
+	  floater.removeFromStage = (0, _draw.addToStage)(floater);
 
 	  return floater;
 	};
@@ -1987,6 +2093,10 @@
 
 	  this.x = (0, _util.lerp)(this.x, cameraTargetX, 0.02);
 	  this.y = (0, _util.lerp)(this.y, cameraTargetY, 0.02);
+	  if (state.player.isPulling) {
+	    this.x += (0, _util.rand)(-20, 20) * state.player.speed;
+	    this.y += (0, _util.rand)(-20, 20) * state.player.speed;
+	  }
 	  this.zoom = (0, _util.lerp)(this.zoom, 1 - Math.pow(state.player.speed, 2), 0.01);
 	  this.zoom = (0, _util.clamp)(this.zoom, 0.2, 0.5);
 	  var twoPi = Math.PI * 2;
@@ -2033,7 +2143,7 @@
 	  state.smokes.forEach(function (smoke) {
 	    return smoke.update(state);
 	  });
-	  state.agents.forEach(function (agent) {
+	  state.agents = state.agents.filter(function (agent) {
 	    return agent.update(state);
 	  });
 	  state.camera.update(state);
