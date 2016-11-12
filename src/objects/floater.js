@@ -2,6 +2,8 @@ import SAT from 'sat';
 import { lerp, rand, distance } from '../util';
 import { addToStage } from '../draw';
 
+const PIXI = window.PIXI;
+
 function update(state) {
   this.hitbox.rotate(-this.rotation);
 
@@ -22,10 +24,10 @@ function update(state) {
   }
 
   // state.player.totalDistance += distance(this.position, state.player.position);
-  // this.dX += rand(-0.03, 0.03);
-  // this.dY += rand(-0.03, 0.03);
-  this.dX *= 0.999;
-  this.dY *= 0.999;
+  this.dX += rand(-0.03, 0.03);
+  this.dY += rand(-0.03, 0.03);
+  // this.dX *= 0.999;
+  // this.dY *= 0.999;
 
   this.rotation += this.dRotation;
 
@@ -36,20 +38,22 @@ function update(state) {
   this.hitbox.rotate(this.rotation);
 
   if (this.intersectsWith(state.player)) {
-    state.player.speed = -0.2;
-    state.camera.x += rand(-10 / state.camera.zoom, 10 / state.camera.zoom);
-    state.camera.y += rand(-10 / state.camera.zoom, 10 / state.camera.zoom);
+    this.type.collideWithPlayer(this, state);
   }
+
+  if (this.hp <= 0) {
+    this.removeFromStage();
+    return false;
+  }
+  return true;
 }
 function intersectsWith(sprite) {
   return SAT.testPolygonPolygon(this.hitbox, sprite.hitbox);
 }
 
-export default (startingValues) => {
-  const PIXI = window.PIXI;
+export default ({ position, type }) => {
 
   const size = rand(0.2, 1);
-  // graphics.beginFill(rgbToColor(0xff * size, 0xff * size, 0xff * size));
 
   const vertices = [];
   let currentAngle = 0;
@@ -68,10 +72,11 @@ export default (startingValues) => {
   const satVectors = [];
 
   const mask = new PIXI.Graphics();
-  mask.beginFill(0xB5D6B2);
+  mask.beginFill(0);
 
   const graphics = new PIXI.Graphics();
-  graphics.beginFill(0xB5D6B2);
+
+  graphics.beginFill(type.color);
 
   mask.moveTo(vertices[0].x, vertices[0].y);
   graphics.moveTo(vertices[0].x, vertices[0].y);
@@ -98,8 +103,10 @@ export default (startingValues) => {
   const hitbox = new SAT.Polygon(new SAT.Vector(), satVectors);
 
   const floater = new PIXI.Sprite();
+  floater.hp = 1;
+  floater.type = type;
   floater.size = size;
-  floater.position = startingValues.position;
+  floater.position = position;
   floater.opacity = 0.5;
   floater.textureSprite = texture;
   floater.addChild(graphics);
@@ -117,7 +124,7 @@ export default (startingValues) => {
 
   floater.cacheAsBitmap = true;
 
-  addToStage(floater);
+  floater.removeFromStage = addToStage(floater);
 
   return floater;
 };

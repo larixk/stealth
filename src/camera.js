@@ -1,5 +1,5 @@
 import { isKeyDown } from './input';
-import { clamp, lerp } from './util';
+import { clamp, lerp, rand } from './util';
 
 function update(state) {
   if (isKeyDown('ZoomCameraOut')) {
@@ -41,6 +41,10 @@ function update(state) {
 
   this.x = lerp(this.x, cameraTargetX, 0.02);
   this.y = lerp(this.y, cameraTargetY, 0.02);
+  if (state.player.isPulling) {
+    this.x += rand(-20, 20) * state.player.speed;
+    this.y += rand(-20, 20) * state.player.speed;
+  }
   this.zoom = lerp(this.zoom, 1 - Math.pow(state.player.speed, 2), 0.01);
   this.zoom = clamp(this.zoom, 0.2, 0.5);
   const twoPi = Math.PI * 2;

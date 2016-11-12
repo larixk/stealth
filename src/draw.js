@@ -1,6 +1,9 @@
+import { clamp, lerp } from './util';
 import 'pixi.js';
 
 const PIXI = window.PIXI;
+
+let gui;
 
 let width = 0;
 let height = 0;
@@ -34,12 +37,32 @@ export const addToStage = (child) => {
 
 export const resetStage = () => {
   stage = new PIXI.Container();
+
+
+  const style = {
+    // fontFamily: 'Arial',
+    fontSize: '400px',
+    fontWeight: 'bold',
+    fill: '#F1E4E8',
+    // stroke: '#5A464C',
+    // strokeThickness: 0,
+    // dropShadow: true,
+    // dropShadowColor: '#F1E4E8',
+    // dropShadowAngle: Math.PI / 6,
+    // dropShadowDistance: 50,
+    // wordWrap: true,
+    // wordWrapWidth: 440,
+  };
+
+  gui = new PIXI.Text('', style);
+  gui.points = 0;
+
+  addToStage(gui);
 };
 
 export const setBackground = (color) => {
   renderer.backgroundColor = color;
 };
-
 
 export const draw = ({ camera, player }) => {
   // stage.x = (width / 2) - (camera.x * camera.zoom);
@@ -48,6 +71,13 @@ export const draw = ({ camera, player }) => {
   stage.y = height * 0.75;
   stage.pivot.x = camera.x;
   stage.pivot.y = camera.y;
+  gui.points = lerp(gui.points, player.currentPoints, 0.1);
+  gui.setText(`\n${Math.round(gui.points)}`);
+  gui.anchor.set(0.5, -0.4);
+  gui.x = player.x;
+  gui.y = player.y;
+  gui.scale.x = gui.scale.y = lerp(gui.scale.x, clamp(Math.abs(player.currentPoints - gui.points) / 100, 0.1, 1), 0.1);
+  gui.rotation = lerp(gui.rotation, -camera.rotation, 0.1);
   stage.scale.x = stage.scale.y = camera.zoom;
   stage.rotation = camera.rotation;
   renderer.render(stage);

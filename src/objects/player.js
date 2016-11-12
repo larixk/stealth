@@ -8,17 +8,28 @@ function update(state) {
   this.hitbox.rotate(-this.rotation);
 
   if (isKeyDown('TurnPlayerRight')) {
-    this.rotation += lerp(0.01, 0.06, this.speed);
+    this.rotation += lerp(0.05, 0.06, this.speed);
     this.rotation %= Math.PI * 2;
   }
   if (isKeyDown('TurnPlayerLeft')) {
-    this.rotation -= lerp(0.01, 0.06, this.speed);
+    this.rotation -= lerp(0.05, 0.06, this.speed);
     this.rotation += Math.PI * 2;
     this.rotation %= Math.PI * 2;
   }
   if (isKeyDown('MovePlayerForward')) {
     this.speed += 0.03;
     this.speed = Math.min(1, this.speed);
+
+    let smokeColor = 0xF1E4E8;
+    if (this.speed >= 0.5) {
+      if (this.currentPoints <= 0) {
+        this.currentPoints = 0;
+        this.speed = 0.5;
+      } else {
+        smokeColor = 0xB5D6B2;
+        this.currentPoints -= 1;
+      }
+    }
     times(1, () => {
       const smokeDistance = rand(5, 30) * (this.speed + 1);
       const dX = Math.cos(this.rotation) * -smokeDistance + rand(-15, 15) * this.speed;
@@ -27,16 +38,19 @@ function update(state) {
         position: {
           x: this.position.x + dX,
           y: this.position.y + dY,
-        }
+        },
+        color: smokeColor
       }));
     });
   }
   if (isKeyDown('MovePlayerBack')) {
-    this.speed -= 0.1;
+    this.speed -= 0.05;
     this.speed = Math.max(-0.5, this.speed);
   }
   this.pullEffect.alpha = 0;
+  this.isPulling = false;
   if (isKeyDown('Pull')) {
+    this.isPulling = true;
     state.playerWell = { position: this.position, strength: 0.5 };
     this.pullEffect.width = this.pullEffect.height /= 1.1;
     if (this.pullEffect.width < 100) {
@@ -45,6 +59,7 @@ function update(state) {
     this.pullEffect.alpha = 1;
   }
   if (isKeyDown('Push')) {
+    this.isPulling = true;
     state.playerWell = { position: this.position, strength: -1 };
 
     this.pullEffect.width = this.pullEffect.height *= 1.1;
@@ -82,7 +97,7 @@ function update(state) {
   this.position.x += dX;
   this.position.y += dY;
 
-  this.redshift.alpha = this.speed;
+  this.redshift.alpha = 0; //this.speed;
 
   this.hitbox.setOffset(new SAT.Vector(this.position.x, this.position.y));
   this.hitbox.rotate(this.rotation);
@@ -129,6 +144,7 @@ export default () => {
   player.size = 0.1;
   player.dX = 0;
   player.dY = 0;
+  player.currentPoints = 0;
   player.update = update.bind(player);
 
   player.hitbox = new SAT.Polygon(new SAT.Vector(), [
