@@ -1,6 +1,6 @@
 export const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
-export const sample = (array) => array[Math.floor(Math.random() * array.length)];
+export const sample = array => array[Math.floor(Math.random() * array.length)];
 
 export const lerp = (a, b, t) => a + (t * (b - a));
 
@@ -14,7 +14,7 @@ export const distance = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.po
 
 export const direction = (p1, p2) => Math.atan2(p2.y - p1.y, p2.x - p1.x);
 
-export const rgbToColor = (r, g, b) => (r << 16) + (g << 8) + b;
+export const rgbToColor = (r, g, b) => (r << 16) + (g << 8) + b; // eslint-disable-line no-bitwise
 
 export const throttle = (f, t) => {
   let lastCall = 0;

@@ -26,11 +26,11 @@ function update(state) {
         this.currentPoints = 0;
         this.speed = 0.5;
       } else {
-        smokeColor = 0xB5D6B2;
+        smokeColor = 0xFFEFBD;
         this.currentPoints -= 1;
       }
     }
-    times(1, () => {
+    times(Math.round(Math.random()), () => {
       const smokeDistance = rand(5, 30) * (this.speed + 1);
       const dX = Math.cos(this.rotation) * -smokeDistance + rand(-15, 15) * this.speed;
       const dY = Math.sin(this.rotation) * -smokeDistance + rand(-15, 15) * this.speed;
@@ -107,7 +107,7 @@ export default () => {
   const PIXI = window.PIXI;
   const graphics = new PIXI.Graphics();
 
-  const size = 2;
+  const size = 3;
   graphics.beginFill(0xFFEFBD);
 
   graphics.moveTo(-10 * size, -6 * size);

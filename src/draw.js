@@ -56,6 +56,7 @@ export const resetStage = () => {
 
   gui = new PIXI.Text('', style);
   gui.points = 0;
+  gui.maxPoints = 1;
 
   addToStage(gui);
 };
@@ -72,7 +73,8 @@ export const draw = ({ camera, player }) => {
   stage.pivot.x = camera.x;
   stage.pivot.y = camera.y;
   gui.points = lerp(gui.points, player.currentPoints, 0.1);
-  gui.setText(`\n${Math.round(gui.points)}`);
+  gui.maxPoints = Math.max(gui.points, gui.maxPoints);
+  gui.setText(`\n${Math.round(100 * (gui.points / gui.maxPoints))}`);
   gui.anchor.set(0.5, -0.4);
   gui.x = player.x;
   gui.y = player.y;
