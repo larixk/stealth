@@ -43,9 +43,6 @@ const tick = () => {
   }
   if (options.state) {
     options.draw(options.state);
-    if (options.sound) {
-      options.sound(options.state);
-    }
   }
   requestAnimationFrame(tick);
 };

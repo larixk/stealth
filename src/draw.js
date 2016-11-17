@@ -79,7 +79,7 @@ export const draw = ({ camera, player }) => {
   gui.x = player.x;
   gui.y = player.y;
   gui.scale.x = gui.scale.y = lerp(gui.scale.x, clamp(Math.abs(player.currentPoints - gui.points) / 100, 0.1, 1), 0.1);
-  gui.rotation = lerp(gui.rotation, -camera.rotation, 0.1);
+  gui.rotation = lerp(gui.rotation, -camera.rotation, 0.2);
   stage.scale.x = stage.scale.y = camera.zoom;
   stage.rotation = camera.rotation;
   renderer.render(stage);

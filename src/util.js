@@ -16,6 +16,14 @@ export const direction = (p1, p2) => Math.atan2(p2.y - p1.y, p2.x - p1.x);
 
 export const rgbToColor = (r, g, b) => (r << 16) + (g << 8) + b; // eslint-disable-line no-bitwise
 
+export const normalize = (x, y) => {
+  const length = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+  return {
+    x: x / length,
+    y: y / length,
+  };
+};
+
 export const throttle = (f, t) => {
   let lastCall = 0;
   return (...args) => {

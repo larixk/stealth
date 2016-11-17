@@ -45,7 +45,7 @@ function update(state) {
     this.x += rand(-20, 20) * state.player.speed;
     this.y += rand(-20, 20) * state.player.speed;
   }
-  this.zoom = lerp(this.zoom, 1 - Math.pow(state.player.speed, 2), 0.01);
+  this.zoom = lerp(this.zoom, 1 - Math.pow(state.player.speed, 3), 0.005);
   this.zoom = clamp(this.zoom, 0.2, 0.5);
   const twoPi = Math.PI * 2;
   const targetRotation = -state.player.rotation - (Math.PI / 2);

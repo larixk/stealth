@@ -12,8 +12,8 @@ function update(state) {
   if (state.wells) {
     state.wells.forEach((well) => {
       const d = distance(this.position, well.position) / well.strength;
-      this.dX += ((well.position.x - this.position.x) / Math.pow(d, 2)) * ((1 - this.size) * 3000);
-      this.dY += ((well.position.y - this.position.y) / Math.pow(d, 2)) * ((1 - this.size) * 3000);
+      this.dX += ((well.position.x - this.position.x) / Math.pow(d, 1)) * ((1 - this.size) * 0.1);
+      this.dY += ((well.position.y - this.position.y) / Math.pow(d, 1)) * ((1 - this.size) * 0.1);
     });
   }
   this.distanceToPlayer = distance(this.position, state.player.position);
@@ -134,10 +134,10 @@ export default ({ position, type }) => {
   // floater.addChild(texture);
   floater.anchor.y = floater.anchor.x = 0.5;
   floater.speed = 0;
-  floater.dX = 0;
-  floater.dY = 0;
-  // floater.dX = rand(-10, 10);
-  // floater.dY = rand(-10, 10);
+  // floater.dX = 0;
+  // floater.dY = 0;
+  floater.dX = rand(-5, 5);
+  floater.dY = rand(-5, 5);
   floater.dRotation = rand(-0.01, 0.01);
   floater.update = update.bind(floater);
   floater.intersectsWith = intersectsWith.bind(floater);

@@ -61,7 +61,7 @@ export default (state) => {
   const distance = rand(5500, 8000);
   // const distance = 200;
   return floater({
-    type: rand(1) < 0.05 ? floaterTypes[0] : floaterTypes[1],
+    type: rand(1) < 0.1 ? floaterTypes[0] : floaterTypes[1],
     position: {
       x: state.player.position.x + Math.sin(direction) * distance,
       y: state.player.position.y + Math.cos(direction) * distance,
