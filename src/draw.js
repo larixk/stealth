@@ -74,7 +74,8 @@ export const draw = ({ camera, player }) => {
   stage.pivot.y = camera.y;
   gui.points = lerp(gui.points, player.currentPoints, 0.1);
   gui.maxPoints = Math.max(gui.points, gui.maxPoints);
-  gui.setText(`\n${Math.round(100 * (gui.points / gui.maxPoints))}`);
+  // gui.setText(`\n${Math.round(100 * (gui.points / gui.maxPoints))}`);
+  gui.setText(`\n${player.currentPoints}`);
   gui.anchor.set(0.5, -0.4);
   gui.x = player.x;
   gui.y = player.y;

@@ -1,17 +1,9 @@
-import createFloater from './objects/createFloater';
-
 export default (state) => {
   const newState = state;
-  newState.playerWell = null;
   newState.player.update(newState);
   newState.smokes.forEach(smoke => smoke.update(newState));
-  newState.flockers.forEach(flocker => flocker.update(newState));
-  newState.agents = newState.agents.filter(agent => agent.update(newState));
+  newState.steadies.forEach(steady => steady.update(newState));
   newState.camera.update(newState);
-
-  while (newState.agents.length < 20) {
-    newState.agents.push(createFloater(state));
-  }
 
   return newState;
 };

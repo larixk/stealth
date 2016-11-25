@@ -2,9 +2,9 @@ import { rand, distance, lerp } from '../util';
 import { addToStage } from '../draw';
 
 function update(state) {
-  // this.alpha -= 0.003;
+  this.alpha -= 0.003;
   // this.height += 0.02;
-  this.height /= 1.01;
+  this.height /= 1.02;
   this.hp -= this.dHp;
   this.width = this.height;
 
